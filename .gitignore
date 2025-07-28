@@ -35,5 +35,11 @@
 *.build/
 *.builddir/
 
+# Ignore source files of libraries, Meson will download them automatically
+/subprojects/*
+
+# These files are important for git to keep track of; tells Meson what libraries to download
+!/subprojects/*.wrap
+
 # VScode settings
 *.vscode/

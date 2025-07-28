@@ -1,5 +1,7 @@
 project('tickets for sale', 'cpp')
 
+json_dep = dependency('nlohmann_json', fallback: ['nlohmann_json', 'nlohmann_json_dep'])
+
 srcs = [
 	'main.cpp',
 	'code/helpers.cpp',
@@ -14,4 +16,4 @@ srcs = [
 	'code/menus/ticket_purchasing_menu.cpp',
 ]
 
-executable('tickets-for-sale', srcs)
+executable('tickets-for-sale', srcs, dependencies : [json_dep])
