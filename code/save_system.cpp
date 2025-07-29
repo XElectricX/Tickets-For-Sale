@@ -253,8 +253,10 @@ void menu() {
     }
 }
 
+#ifdef SAVE_SYSTEM_TEST
 int main() {
-	writeExampleAutoSave("AutoSave.json");
+    writeExampleAutoSave("AutoSave.json");
     menu();
     return 0;
 }
+#endif
