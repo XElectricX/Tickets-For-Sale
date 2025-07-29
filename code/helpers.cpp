@@ -25,6 +25,14 @@ void int_input(int &input)
 	input = std::stoi(temp);
 }
 
+//Get input from the user and store it in the input variable as a small unsigned integer (no negative values)
+void short_int_input(unsigned short int &input)
+{
+	string temp;
+	std::getline(std::cin, temp);
+	input = static_cast<unsigned short int>(std::stoi(temp));
+}
+
 //Get input from the user and store it in the input variable as a double
 void double_input(double &input)
 {

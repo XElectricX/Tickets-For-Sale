@@ -41,5 +41,8 @@
 # These files are important for git to keep track of; tells Meson what libraries to download
 !/subprojects/*.wrap
 
+# Ignore save data
+/save data/
+
 # VScode settings
 *.vscode/
