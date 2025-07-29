@@ -4,89 +4,119 @@
 #include <ftxui/component/screen_interactive.hpp>
 #include <vector>
 #include <string>
+#include <iomanip>
+#include <sstream>
 #include "menu_system.h"
+#include "base_menu.h"
 
 using namespace ftxui;
 
-int show_statistics_menu() {
-    // Stats data (in a real implementation, this would come from the game state)
-    int tickets_sold = 152;
-    int tickets_bought = 199;
-    int revenue = 15250;
-    int expenses = 9950;
-    int profit = revenue - expenses;
-    float avg_markup = 27.5f;
-    std::string most_popular = "Business Class - Tokyo to London";
+class StatisticsMenu : public BaseMenu
+{
+public:
+    StatisticsMenu() : BaseMenu("📊 SALES STATISTICS", "Your Trading Performance")
+    {
+        add_option("Export Statistics", 'e', MENU_STATISTICS);
+        add_option("Reset Statistics", 'r', MENU_STATISTICS, [this]()
+                   { reset_stats(); });
+        add_option("View Detailed Report", 'd', MENU_STATISTICS);
+        add_option("Back to Ticket Counter", 'b', MENU_TICKET_COUNTER); // Changed to go back to ticket counter
 
-    // Create a back button
-    std::string back_label = "Back to Ticket Counter";
-    auto back_button = Button(&back_label, [&] { return true; });
+        set_footer("Use arrow keys, hotkeys [E/R/D/B], or Enter to select");
+        set_theme_colors(Color::Blue, Color::White, Color::Yellow, Color::Cyan);
+    }
 
-    // Container with just the back button
-    auto container = Container::Vertical({
-        back_button,
-    });
+private:
+    void reset_stats()
+    {
+        // Placeholder for statistics reset functionality
+        // In a real implementation, this would reset statistics with confirmation
+    }
 
-    bool exit_menu = false;
-    back_button->on_click = [&] {
-        exit_menu = true;
-        return true;
-    };
+    std::string format_currency(int amount)
+    {
+        return "$" + std::to_string(amount);
+    }
 
-    auto screen = ScreenInteractive::TerminalOutput();
+    std::string format_percentage(float percentage)
+    {
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(1) << percentage << "%";
+        return ss.str();
+    }
 
-    auto renderer = Renderer(container, [&] {
-        return vbox({
-            text("📊 SALES STATISTICS 📊") | bold | center,
-            separator(),
-            vbox({
-                hbox({
-                    text("Tickets Sold: ") | color(Color::BlueLight),
-                    text(std::to_string(tickets_sold))
-                }),
-                hbox({
-                    text("Tickets Bought: ") | color(Color::BlueLight),
-                    text(std::to_string(tickets_bought))
-                }),
-                separator(),
-                hbox({
-                    text("Total Revenue: ") | color(Color::GreenLight),
-                    text("$" + std::to_string(revenue))
-                }),
-                hbox({
-                    text("Total Expenses: ") | color(Color::RedLight),
-                    text("$" + std::to_string(expenses))
-                }),
-                hbox({
-                    text("Net Profit: ") | color(profit >= 0 ? Color::Green : Color::Red),
-                    text("$" + std::to_string(profit))
-                }),
-                separator(),
-                hbox({
-                    text("Average Markup: ") | color(Color::YellowLight),
-                    text(std::to_string(avg_markup) + "%")
-                }),
-                hbox({
-                    text("Most Popular Ticket: ") | color(Color::YellowLight),
-                    text(most_popular)
-                }),
-            }) | border,
-            filler(),
-            container->Render(),
-            separator(),
-            text("Press Enter to return to the Ticket Counter") | dim | center
-        }) | border;
-    });
+protected:
+    Element create_header() override
+    {
+        return vbox({text("📊 SALES STATISTICS 📊") | bold | center | color(Color::Blue),
+                     text("Your Trading Performance") | center | color(Color::White),
+                     separator(),
+                     text("Track your progress and identify opportunities") | dim | center});
+    }
 
-    // Exit the menu loop when back button is clicked
-    container->on_change = [&] {
-        if (exit_menu) {
-            screen.ExitLoopClosure()();
-        }
-    };
+    Element create_menu_content() override
+    {
+        // Calculate profit and profit margin
+        int profit = g_game_state.total_revenue - g_game_state.total_expenses;
+        float profit_margin = g_game_state.total_revenue > 0 ? (static_cast<float>(profit) / g_game_state.total_revenue * 100) : 0.0f;
 
-    screen.Loop(renderer);
+        return vbox({// Trading Summary
+                     text("📈 TRADING SUMMARY") | bold | color(Color::GreenLight),
+                     separator(),
+                     hbox({vbox({hbox({text("Tickets Sold: ") | color(Color::BlueLight),
+                                       text(std::to_string(g_game_state.total_tickets_sold)) | bold}),
+                                 hbox({text("Tickets Bought: ") | color(Color::BlueLight),
+                                       text(std::to_string(g_game_state.total_tickets_bought)) | bold}),
+                                 hbox({text("Net Tickets: ") | color(Color::BlueLight),
+                                       text(std::to_string(g_game_state.total_tickets_bought - g_game_state.total_tickets_sold)) | bold})}) |
+                               flex,
+                           separator(),
+                           vbox({hbox({text("Total Revenue: ") | color(Color::GreenLight),
+                                       text(format_currency(g_game_state.total_revenue)) | bold | color(Color::Green)}),
+                                 hbox({text("Total Expenses: ") | color(Color::RedLight),
+                                       text(format_currency(g_game_state.total_expenses)) | bold | color(Color::Red)}),
+                                 hbox({text("Net Profit: ") | color(profit >= 0 ? Color::GreenLight : Color::RedLight),
+                                       text(format_currency(profit)) | bold | color(profit >= 0 ? Color::Green : Color::Red)})}) |
+                               flex}),
+                     separator(),
 
-    // Return to ticket counter
-    return MENU_BACK;
+                     // Performance Metrics
+                     text("🎯 PERFORMANCE METRICS") | bold | color(Color::YellowLight),
+                     separator(),
+                     hbox({vbox({hbox({text("Average Markup: ") | color(Color::YellowLight),
+                                       text(format_percentage(g_game_state.average_markup)) | bold}),
+                                 hbox({text("Profit Margin: ") | color(Color::YellowLight),
+                                       text(format_percentage(profit_margin)) | bold})}) |
+                               flex,
+                           separator(),
+                           vbox({text("Most Popular Ticket:") | color(Color::YellowLight),
+                                 text(g_game_state.most_popular_ticket) | bold | color(Color::Cyan)}) |
+                               flex}),
+                     separator(),
+
+                     // Today's Performance
+                     text("📅 TODAY'S PERFORMANCE") | bold | color(Color::MagentaLight),
+                     separator(),
+                     hbox({hbox({text("Revenue: ") | color(Color::MagentaLight),
+                                 text(format_currency(g_game_state.daily_revenue)) | bold}),
+                           text("  |  "),
+                           hbox({text("Customers: ") | color(Color::MagentaLight),
+                                 text(std::to_string(g_game_state.tickets_sold_today)) | bold}),
+                           text("  |  "),
+                           hbox({text("Cash: ") | color(Color::MagentaLight),
+                                 text(format_currency(g_game_state.cash)) | bold})}) |
+                         center,
+                     separator(),
+
+                     // Menu options
+                     text("📋 ACTIONS") | bold | color(Color::White),
+                     separator(),
+                     BaseMenu::create_menu_content()});
+    }
+};
+
+int show_statistics_menu()
+{
+    StatisticsMenu menu;
+    return menu.show();
 }

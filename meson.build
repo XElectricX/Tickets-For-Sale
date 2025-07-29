@@ -23,20 +23,24 @@ srcs = [
 	'code/save_system.cpp',
 	'code/objects/tickets.cpp',
 	'code/objects/customers.cpp',
+	'code/menus/base_menu.cpp',
+	'code/menus/game_state.cpp',
 	'code/menus/barter_menu.cpp',
 	'code/menus/main_menu.cpp',
+	'code/menus/options_menu.cpp',
+	'code/menus/statistics_menu.cpp',
 	'code/menus/ticket_counter_menu.cpp',
 	'code/menus/ticket_inventory_menu.cpp',
 	'code/menus/ticket_purchasing_menu.cpp',
+	'code/menus/menu_state_manager.cpp',
+	'code/menus/settings_manager.cpp',
 ]
 
-executable('tickets-for-sale', srcs, dependencies : [json_dep])
-
-# Only build FTXUI menu if dependencies are available
+# Main executable with FTXUI support
 if ftxui_found
-    executable('ftxui-menu-demo', 'code/ftxui_menu.cpp',
-               dependencies: ftxui_dep,
+    executable('tickets-for-sale', srcs,
+               dependencies: [json_dep, ftxui_component_dep, ftxui_dom_dep, ftxui_screen_dep],
                override_options: ['cpp_std=c++17'])
 else
-    message('FTXUI not found, skipping FTXUI menu demo')
+    executable('tickets-for-sale', srcs, dependencies: [json_dep])
 endif
