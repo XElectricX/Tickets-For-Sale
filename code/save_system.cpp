@@ -3,143 +3,74 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <filesystem>
+#include "save_system.h"
 #include <nlohmann/json.hpp>
+#include "helpers.h"
+#include "defines.h"
 
 using json = nlohmann::json;
 using namespace std;
+namespace fs = std::filesystem;
 
-// Structure for game data
-struct GameData {
-    string current_day;
-    string ticket_data;
-    string TICKET_CLASS_ECONOMY, TICKET_CLASS_BUSINESS, TICKET_CLASS_LUXURY;
-    string currency_amount;
-};
+vector<string> save_slot_index;
 
-const vector<string > allowed_slots = { "slot1", "slot2", "slot3", "slot4", "slot5" };
-
-void writeExampleAutoSave(const string& filename) {
-    GameData example_data = {
-        "3", // game_date
-        "60", // ticket_data (Total Tickets)
-        "30", // TICKET_CLASS_ECONOMY
-        "20", // TICKET_CLASS_BUSINESS
-        "10", // TICKET_CLASS_LUXURY
-        "500", // currency_amount
-
-    };
-
-    json j;
-    j["current_day"] = example_data.current_day;
-    j["ticket_data"] = example_data.ticket_data;
-    j["TICKET_CLASS_ECONOMY"] = example_data.TICKET_CLASS_ECONOMY;
-    j["TICKET_CLASS_BUSINESS"] = example_data.TICKET_CLASS_BUSINESS;
-    j["TICKET_CLASS_LUXURY"] = example_data.TICKET_CLASS_LUXURY;
-    j["currency_amount"] = example_data.currency_amount;
-
-
-
-    ofstream file(filename);
-    if (file.is_open()) {
-        file << j.dump(4);
-        file.close();
-        cout << "Example auto-save data written to '" << filename << "'.\n";
-    }
-    else {
-        cerr << "Failed to save to '" << filename << "'.\n";
-    }
-}
-
-GameData read_current_game_state(const string& filename) {
-    GameData data;
-	ifstream file(filename);
-    if (file.is_open()) {
-        json j;
-        file >> j;
-        file.close();
-
-        if (j.contains("current_day")) data.current_day = j["current_day"];
-        if (j.contains("ticket_data")) data.ticket_data = j["ticket_data"];
-        if (j.contains("TICKET_CLASS_ECONOMY")) data.TICKET_CLASS_ECONOMY = j["TICKET_CLASS_ECONOMY"];
-        if (j.contains("TICKET_CLASS_BUSINESS")) data.TICKET_CLASS_BUSINESS = j["TICKET_CLASS_BUSINESS"];
-        if (j.contains("TICKET_CLASS_LUXURY")) data.TICKET_CLASS_LUXURY = j["TICKET_CLASS_LUXURY"];
-        if (j.contains("currency_amount")) data.currency_amount = j["currency_amount"];
-
-        cout << "\n--- Loaded from autosave ---\n";
-		cout << "Day: " << data.current_day << "\n";
-		cout << "Total Tickets: " << data.ticket_data << "\n";
-		cout << "-Economy Class: " << data.TICKET_CLASS_ECONOMY << "\n";
-		cout << "-Business Class: " << data.TICKET_CLASS_BUSINESS << "\n";
-		cout << "-First Class: " << data.TICKET_CLASS_LUXURY << "\n";
-		cout << "Total Currency: " << data.currency_amount << "\n";
-		cout << "-----------------------------\n";
-    }
-    else {
-        cerr << "Could not open file: " << filename << "\n";
-    }
-	return data;
-}
-
-// Save data to JSON file
-void saveData(const GameData& data, const string& filename, const string& slot_name) {
-    json j;
-    ifstream inFile(filename);
-    if (inFile.is_open()) {
-        try {
-            if (inFile.peek() != ifstream::traits_type::eof()) {
-                inFile >> j;
-            }
-        }
-        catch (const std::exception& e) {
-            j = json::object();
-        }
-        inFile.close();
-    }
-
-    // Checking for slot limit
-    if (!j.contains(slot_name) && j.size() >= 5) {
-        cout << "Maximum save slots reached. Please delete an existing slot before saving.\n";
-        return;
-    }
-
-    // Prompt for overwrite only if the slot already exists
-    if (j.contains(slot_name)) {
-        char confirm;
-        cout << "Slot '" << slot_name << "' already has a save. Do you want to overwrite it? (y/n): ";
-        cin >> confirm;
-        if (confirm != 'y' && confirm != 'Y') {
-            cout << "Save cancelled.\n";
-            return;
-        }
-    }
-
-    j[slot_name]["current_day"] = data.current_day;
-    j[slot_name]["ticket_data"] = data.ticket_data;
-    j[slot_name]["TICKET_CLASS_ECONOMY"] = data.TICKET_CLASS_ECONOMY;
-	j[slot_name]["TICKET_CLASS_BUSINESS"] = data.TICKET_CLASS_BUSINESS;
-	j[slot_name]["TICKET_CLASS_LUXURY"] = data.TICKET_CLASS_LUXURY;
-    j[slot_name]["currency_amount"] = data.currency_amount;
-
-    ofstream file(filename);
-    if (file.is_open()) {
-        file << j.dump(4);
-        file.close();
-        cout << "Data saved to slot: "<< slot_name << "\n";
-    }
-    else {
-        cout << "File could not be saved.\n";
-    }
-}
-
-// Load data from JSON file
-GameData loadData(const string& filename, const string& slot_name) {
+// Copilot: Reads the current game state from a JSON file (autosave) and prints the loaded values.
+GameData GameData::read_current_game_state(const string &filename)
+{
     GameData data;
     ifstream file(filename);
-    if (file.is_open()) {
+    if (file.is_open())
+    {
+        json j;
+        file >> j;
+        file.close();
+
+        // Copilot: Extract each field from the JSON if it exists
+        if (j.contains("current_day"))
+            data.current_day = j["current_day"];
+        if (j.contains("ticket_data"))
+            data.ticket_data = j["ticket_data"];
+        if (j.contains("TICKET_CLASS_ECONOMY"))
+            data.TICKET_CLASS_ECONOMY = j["TICKET_CLASS_ECONOMY"];
+        if (j.contains("TICKET_CLASS_BUSINESS"))
+            data.TICKET_CLASS_BUSINESS = j["TICKET_CLASS_BUSINESS"];
+        if (j.contains("TICKET_CLASS_LUXURY"))
+            data.TICKET_CLASS_LUXURY = j["TICKET_CLASS_LUXURY"];
+        if (j.contains("currency_amount"))
+            data.currency_amount = j["currency_amount"];
+
+        // Copilot: Print out the loaded data for debugging/confirmation
+        cout << "\n--- Loaded from autosave ---\n";
+        cout << "Day: " << data.current_day << "\n";
+        cout << "Total Tickets: " << data.ticket_data << "\n";
+        cout << "-Economy Class: " << data.TICKET_CLASS_ECONOMY << "\n";
+        cout << "-Business Class: " << data.TICKET_CLASS_BUSINESS << "\n";
+        cout << "-First Class: " << data.TICKET_CLASS_LUXURY << "\n";
+        cout << "Total Currency: " << data.currency_amount << "\n";
+        cout << "-----------------------------\n";
+    }
+    else
+        cerr << "Could not open file: " << filename << "\n";
+
+    // Copilot: Return the loaded game data (or default if file not found)
+    return data;
+}
+
+// Copilot: Loads GameData from a specific slot in the JSON file.
+// Copilot: Reads the file, finds the slot, and populates the GameData struct.
+GameData GameData::loadData(const string &filename, const string &slot_name)
+{
+    GameData data;
+    ifstream file(filename);
+    if (file.is_open())
+    {
         json j;
         file >> j;
 
-        if (j.contains(slot_name)) {
+        // Copilot: Check if the requested slot exists
+        if (j.contains(slot_name))
+        {
             auto slot = j[slot_name];
             data.current_day = slot["current_day"];
             data.ticket_data = slot["ticket_data"];
@@ -149,33 +80,40 @@ GameData loadData(const string& filename, const string& slot_name) {
             data.currency_amount = slot["currency_amount"];
             cout << "Data loaded from slot: " << slot_name << "\n";
         }
-        else {
+        else
             cerr << "Slot " << slot_name << " not found.\n";
-        }
 
         file.close();
     }
-    else {
+    else
         cerr << "The file could not be loaded.\n";
-    }
+
+    // Copilot: Return the loaded data (or default if not found)
     return data;
 }
 
-void listSaveSlots(const string& filename) {
-    ifstream file(filename);
-    json j;
-    if (file.is_open()) {
-        if (file.peek() != ifstream::traits_type::eof()) {
-            file >> j;
-        }
-        file.close();
-    }
-        cout << "\n--- Save Slots ---\n";
-        for (const auto& slot : allowed_slots) {
-            if (j.contains(slot)) {
-                auto& value = j[slot];
-                cout << "Slot: " << slot << "(USED)\n";
-                if (value.is_object()) {
+// Get a list of all existing save files and index them for easy access in save_slot_index
+void update_save_slot_index()
+{
+    const string save_folder = "save data";
+    for (int i = 1; i <= MAX_SAVE_SLOTS; ++i)
+    {
+        // Copilot: Build the expected file path for this slot
+        string filepath = save_folder + "/" + "slot" + to_string(i) + ".json";
+        if (fs::exists(filepath))
+        {
+            // File exists, so add to save_slot_index
+            save_slot_index.push_back(filepath);
+
+            ifstream file(filepath);
+            if (file.is_open())
+            {
+                json value;
+                file >> value;
+                print("Slot: " + to_string(i) + " (USED)\n");
+                if (value.is_object())
+                {
+                    // Copilot: Print out all relevant fields for this save slot
                     cout << " | Day " << value["current_day"] << "\n";
                     cout << " | Total Tickets : " << value["ticket_data"] << "\n";
                     cout << " | Economy: " << value["TICKET_CLASS_ECONOMY"] << "\n";
@@ -183,80 +121,106 @@ void listSaveSlots(const string& filename) {
                     cout << " | First Class: " << value["TICKET_CLASS_LUXURY"] << "\n";
                     cout << " | Total Currency: " << value["currency_amount"] << "\n\n";
                 }
-                else {
-                    cout << "Slot: " << slot << " (EMPTY)\n";
-                }
             }
-        }
-}
-
-bool isValidSlot(const string& slot) {
-    return find(allowed_slots.begin(), allowed_slots.end(), slot) != allowed_slots.end();
-}
-
-// Menu
-void menu() {
-    GameData data;
-    string filename = "TrainFile.json";
-    string autosave_file = "AutoSave.json";
-    int choice;
-    string slot;
-
-    while (true) {  // add multiple save slots to the save menu
-        cout << "\n--- Menu ---\n";
-        cout << "1. Save Game\n";
-        cout << "2. Load Game\n";
-		cout << "3. List Save Slots\n";
-        cout << "4. Exit\n";
-        cout << "Choice: ";
-        cin >> choice;
-
-        if (choice == 1) {
-			listSaveSlots(filename);
-            cout << "Enter save slot name (slot1-slot5): ";
-            cin >> slot;
-            if (!isValidSlot(slot)) {
-				cout << "Invalid slot. Please enter a slot name between slot1 and slot5.\n";
-                continue;
-            }
-
-			data = read_current_game_state(autosave_file);
-            saveData(data, filename, slot);
-        }
-        else if (choice == 2) {
-            listSaveSlots(filename);
-            cout << "Enter the save slot name to load: ";
-            cin >> slot;
-            if (!isValidSlot(slot)) {
-                cout << "Invalid slot. \n";
-                continue;
-            }
-
-            data = loadData(filename, slot);
-            cout << "Day " << data.current_day << "\n";
-            cout << "Total Tickets: " << data.ticket_data << "\n";
-            cout << "Ticket amount for: \n";
-            cout << " - Economy Class: "<< data.TICKET_CLASS_ECONOMY << "\n";
-            cout << " - Business Class: " << data.TICKET_CLASS_BUSINESS << "\n";
-            cout << " - First Class: " << data.TICKET_CLASS_LUXURY << "\n";
-            cout << "Total Currency: " << data.currency_amount << "\n";
-        }
-        else if (choice == 3) {
-            listSaveSlots(filename);
-        }
-        else if (choice == 4) {
-            break;
-        }
-        else {
-            cout << "Invalid choice.\n";
         }
     }
+
+    if (save_slot_index.empty())
+        return;
+
+    // Sort the save_slot_index vector alphabetically
+    std::sort(save_slot_index.begin(), save_slot_index.end());
 }
 
-#ifdef SAVE_SYSTEM_TEST
-int main() {
-    writeExampleAutoSave("AutoSave.json");
-    menu();
-    return 0;
+// Copilot: Saves the provided GameData to an individual file for each slot in the 'save data' directory.
+// Copilot: The file is named 'slot[slot_number].json' and stored in 'save data/'.
+// Copilot: Prompts the user if overwriting an existing slot file, except for autosaves.
+void saveData(const GameData &data, int slot_number, bool is_autosave)
+{
+    // Copilot: Build the file path for the slot
+    string save_folder = "save data";
+
+    // Copilot: Ensure the save directory exists (C++17 and later)
+    if (!fs::exists(save_folder))
+    {
+        fs::create_directory(save_folder);
+    }
+
+    // Naming convention: autosave1, autosave2, etc. for manual saves, while autosaves use autosave1, autosave2, etc.
+    string filepath = save_folder + (is_autosave ? "/autosave" : "/slot") + to_string(slot_number) + ".json";
+
+    // Copilot: For manual saves, prompt if overwriting. For autosaves, always overwrite.
+    if (!is_autosave && fs::exists(filepath))
+    {
+        char confirm;
+
+        cout << "Slot '" << slot_number << "' already has a save. Do you want to overwrite it? (y/n): ";
+        cin >> confirm;
+
+        if (confirm != 'y' && confirm != 'Y')
+        {
+            print("Save cancelled.\n");
+            return;
+        }
+    }
+
+    // Copilot: Prepare the JSON object for saving
+    json j;
+
+    j["current_day"] = data.current_day;
+    j["ticket_data"] = data.ticket_data;
+    j["TICKET_CLASS_ECONOMY"] = data.TICKET_CLASS_ECONOMY;
+    j["TICKET_CLASS_BUSINESS"] = data.TICKET_CLASS_BUSINESS;
+    j["TICKET_CLASS_LUXURY"] = data.TICKET_CLASS_LUXURY;
+    j["currency_amount"] = data.currency_amount;
+
+    // Copilot: Write the JSON data to the slot file
+    ofstream file(filepath);
+
+    if (file.is_open())
+    {
+        file << j.dump(4);
+        file.close();
+
+        print("Data saved to slot: " + to_string(slot_number) + "\n");
+    }
+
+    else
+        print("File could not be saved.\n");
 }
-#endif
+
+// Copilot: Autosave function that saves the provided GameData to the next autosave slot, rotating and overwriting the oldest if needed.
+void autosaveGameData(const GameData &data)
+{
+    if (save_slot_index.empty())
+    {
+        // There don't appear to be any save slots, so just use the first autosave slot
+        return saveData(data, 1, true);
+    }
+
+    // Keep a tally of the number of autosaves
+    int autosave_count = 0;
+    string oldest_autosave = save_slot_index.front();
+    // Loop through to see which of the "autosave[number].json" files is oldest
+    for (const auto &slot : save_slot_index)
+    {
+        if (slot.find("autosave") != string::npos)
+        {
+            autosave_count++;
+
+            // Set the current autosave as the oldest one if it is older than the current oldest
+            if (fs::last_write_time(slot) < fs::last_write_time(oldest_autosave))
+                oldest_autosave = slot;
+        }
+    }
+
+    if (autosave_count < MAX_AUTO_SAVE_SLOTS)
+    {
+        // There are less than the maximum number of autosaves, so just save to the next slot
+        return saveData(data, autosave_count + 1, true);
+    }
+
+    // Overwrite the oldest autosave
+    int slot_number = stoi(oldest_autosave.substr(oldest_autosave.find("autosave") + 8, 1));
+    saveData(data, slot_number, true);
+}

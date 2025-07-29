@@ -1,5 +1,10 @@
 project('tickets for sale', 'cpp', default_options : ['cpp_std=c++17'])
 
+# Stupid thing has to be forced to use C++17 for some reason
+if meson.get_compiler('cpp').get_id() == 'msvc'
+  add_project_arguments('/std:c++17', language : 'cpp')
+endif
+
 json_dep = dependency('nlohmann_json', fallback: ['nlohmann_json', 'nlohmann_json_dep'])
 
 # Try to find FTXUI using pkgconfig first, then fallback to manual approach
@@ -27,6 +32,7 @@ srcs = [
 	'code/menus/game_state.cpp',
 	'code/menus/barter_menu.cpp',
 	'code/menus/main_menu.cpp',
+	'code/menus/save_system_menus.cpp',
 	'code/menus/options_menu.cpp',
 	'code/menus/statistics_menu.cpp',
 	'code/menus/ticket_counter_menu.cpp',
