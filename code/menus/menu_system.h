@@ -13,8 +13,14 @@ int show_barter_menu();
 int show_options_menu();
 int show_statistics_menu();
 
+// Save system menu functions
+int show_load_game_menu();
+int show_save_game_menu();
+int show_delete_saves_menu();
+
 // Enhanced menu return codes with better organization
-enum MenuResult {
+enum MenuResult
+{
     // Core navigation
     MENU_EXIT = 0,
     MENU_BACK = 1,
@@ -42,7 +48,8 @@ enum MenuResult {
 };
 
 // Game state interface for menus
-struct GameState {
+struct GameState
+{
     int cash = 1250;
     int tickets_in_stock = 47;
     int tickets_sold_today = 12;

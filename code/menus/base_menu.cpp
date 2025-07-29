@@ -1,6 +1,8 @@
 ﻿#include "base_menu.h"
 #include <algorithm>
 #include <cctype>
+#include <thread>
+#include <chrono>
 
 BaseMenu::BaseMenu(const std::string &title, const std::string &subtitle, const std::string &menu_id)
     : title(title), subtitle(subtitle), menu_id(menu_id), footer_text("Use arrow keys, hotkeys, or Enter to select")
@@ -35,7 +37,7 @@ int BaseMenu::show()
     int selected = 0;
     std::vector<std::string> menu_strings;
 
-    // Populate menu strings
+    // Create display strings for the menu
     for (const auto &option : options)
     {
         menu_strings.push_back(option.text);
@@ -52,50 +54,62 @@ int BaseMenu::show()
         }
     }
 
-    // Create the menu component with our selection variable
-    auto menu = Menu(&menu_strings, &selected);
+    // Create the interactive menu component - use simpler approach
+    auto menu_component = Menu(&menu_strings, &selected);
 
-    // Create the screen early so we can reference it in the event handler
+    // Create the interactive menu component using a Container that controls exit
+    auto menu_container = Container::Vertical({menu_component});
+
+    auto full_renderer = Renderer(menu_container, [&]
+                                  { return vbox({create_header(),
+                                                 separator(),
+                                                 menu_component->Render(),
+                                                 separator(),
+                                                 create_status_bar(),
+                                                 separator(),
+                                                 create_footer()}) |
+                                           border; });
+
+    // Create screen
     auto screen = ScreenInteractive::TerminalOutput();
 
-    // Create combined component with header, menu, status, and footer
-    auto combined_component = Renderer(menu, [&]
-                                       { return vbox({create_header(),
-                                                      separator(),
-                                                      menu->Render(), // This renders the actual interactive menu
-                                                      separator(),
-                                                      create_status_bar(),
-                                                      separator(),
-                                                      create_footer()}) |
-                                                border; });
+    // Track if we should exit
+    bool menu_active = true;
+    int return_value = MENU_BACK;
 
-    // Handle keyboard shortcuts and custom events
-    auto event_handler = CatchEvent(combined_component, [&](Event event)
-                                    {
-        // Handle Ctrl+C - in FTXUI, Ctrl+C is represented as character with ASCII code 3
-        if (event.is_character() && event.character().size() == 1 &&
-            static_cast<unsigned char>(event.character()[0]) == 3) {
-            // This will break out of the screen loop, allowing the menu to return MENU_EXIT
+    // Create a container that handles exit logic
+    auto exit_container = Container::Tab({full_renderer}, nullptr);
+
+    // Add event handling to the container
+    exit_container |= CatchEvent([&](Event event)
+                                 {
+        // Handle Ctrl+C
+        if (event == Event::Character('\x03')) {
+            return_value = MENU_EXIT;
+            menu_active = false;
             screen.ExitLoopClosure()();
             return true;
         }
 
-        // Handle hotkeys (only regular character keys, not control characters)
-        if (event.is_character()) {
-            char pressed = event.character()[0];
-            // Ignore control characters (ASCII < 32)
-            if (static_cast<unsigned char>(pressed) >= 32) {
-                pressed = std::tolower(pressed);
+        // Handle hotkeys
+        if (event.is_character() && event.character().size() == 1) {
+            char pressed = std::tolower(event.character()[0]);
+            
+            if (pressed >= 'a' && pressed <= 'z') {
                 for (size_t i = 0; i < options.size(); ++i) {
                     if (std::tolower(options[i].hotkey) == pressed) {
                         selected = static_cast<int>(i);
-                        // Execute action and exit immediately for hotkeys
+                        
                         if (!menu_id.empty() && persist_selection) {
                             MenuStateManager::save_selection(menu_id, selected);
                         }
+                        
                         if (options[selected].action) {
                             options[selected].action();
                         }
+                        
+                        return_value = options[selected].return_value;
+                        menu_active = false;
                         screen.ExitLoopClosure()();
                         return true;
                     }
@@ -103,47 +117,30 @@ int BaseMenu::show()
             }
         }
 
-        // Handle Enter key for selection
+        // Handle Enter key
         if (event == Event::Return) {
-            // Save selection and exit immediately
             if (!menu_id.empty() && persist_selection) {
                 MenuStateManager::save_selection(menu_id, selected);
             }
 
-            // Execute action if present
             if (selected >= 0 && selected < static_cast<int>(options.size())) {
                 if (options[selected].action) {
                     options[selected].action();
                 }
+                return_value = options[selected].return_value;
             }
             
-            // Exit the screen loop to return from the menu
+            menu_active = false;
             screen.ExitLoopClosure()();
             return true;
         }
 
-        // Allow derived classes to handle custom events
-        return handle_custom_events(event); });
+        return false; });
 
-    screen.Loop(event_handler);
+    // Run the screen loop with the exit container
+    screen.Loop(exit_container);
 
-    // Save the selected index if we have a menu ID and persistence is enabled
-    if (!menu_id.empty() && persist_selection)
-    {
-        MenuStateManager::save_selection(menu_id, selected);
-    }
-
-    // Execute action if present, then return the value
-    if (selected >= 0 && selected < static_cast<int>(options.size()))
-    {
-        if (options[selected].action)
-        {
-            options[selected].action();
-        }
-        return options[selected].return_value;
-    }
-
-    return MENU_BACK; // Fallback
+    return return_value;
 }
 
 Element BaseMenu::create_header()

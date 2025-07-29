@@ -2,31 +2,34 @@
 
 #include <string>
 #include <vector>
-#include "code/menus/main_menu.h"
+#include "base_menu.h"
+#include "menu_system.h"
 #include "code/save_system.h"
 #include "code/defines.h"
 
-//Interface for managing saved game data; can be used for loading, saving, and deleting data
-class SaveSlotMenu : public Menu
+using std::string;
+using std::vector;
+
+// Interface for managing saved game data; can be used for loading, saving, and deleting data
+class SaveSlotMenu : public BaseMenu
 {
-	public:
-		string title = LOAD_SLOT_MENU;
+private:
+	string menu_type;
 
-		//Saved games are displayed as options programmatically
-		vector<string> options = {};
-		//Every menu has an option for pressing 0; calls on_zero_option() when pressed
-		string zero_option = "Exit";
+public:
+	SaveSlotMenu(const string &type);
 
-		//Reference to the menu to go back to when this menu is exited; if empty, the program exits
-		Menu* menu_to_go_back_to;
+protected:
+	Element create_header() override;
 
-		void run();
-		void display_choices();
-		void pick_choice(int choice);
-		void on_zero_option();
-		void exit_menu(Menu* destination_menu);
-
-		void populate_options();
-
-		SaveSlotMenu(string title = LOAD_SLOT_MENU);
+private:
+	void populate_save_slots();
+	void handle_load_selection(int slot_index);
+	void handle_save_selection(int slot_index);
+	void handle_delete_selection(int slot_index);
 };
+
+// Function declarations for the new menu system
+int show_load_game_menu();
+int show_save_game_menu();
+int show_delete_saves_menu();

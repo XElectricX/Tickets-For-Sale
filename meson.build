@@ -1,26 +1,18 @@
-project('tickets for sale', 'cpp', default_options : ['cpp_std=c++17'])
+project('tickets for sale', 'cpp', default_options: ['cpp_std=c++17'])
 
 # Stupid thing has to be forced to use C++17 for some reason
 if meson.get_compiler('cpp').get_id() == 'msvc'
-  add_project_arguments('/std:c++17', language : 'cpp')
+	add_project_arguments('/std:c++17', language: 'cpp')
 endif
 
 json_dep = dependency('nlohmann_json', fallback: ['nlohmann_json', 'nlohmann_json_dep'])
 
-# Try to find FTXUI using pkgconfig first, then fallback to manual approach
-ftxui_dep = []
-ftxui_found = false
+# ftxui dependencies
+ftxui_component_dep = dependency('ftxui-component', fallback: ['ftxui', 'component_dep'])
+ftxui_dom_dep = dependency('ftxui-dom', fallback: ['ftxui', 'dom_dep'])
+ftxui_screen_dep = dependency('ftxui-screen', fallback: ['ftxui', 'screen_dep'])
 
-# Check if we can find FTXUI via pkg-config
-ftxui_component_dep = dependency('ftxui-component', required: false, fallback: ['ftxui', 'component_dep'])
-ftxui_dom_dep = dependency('ftxui-dom', required: false, fallback: ['ftxui', 'dom_dep'])
-ftxui_screen_dep = dependency('ftxui-screen', required: false, fallback: ['ftxui', 'screen_dep'])
-
-if ftxui_component_dep.found() and ftxui_dom_dep.found() and ftxui_screen_dep.found()
-    ftxui_dep = [ftxui_component_dep, ftxui_dom_dep, ftxui_screen_dep]
-    ftxui_found = true
-endif
-
+# Source files for the main executable
 srcs = [
 	'main.cpp',
 	'code/helpers.cpp',
@@ -28,6 +20,7 @@ srcs = [
 	'code/save_system.cpp',
 	'code/objects/tickets.cpp',
 	'code/objects/customers.cpp',
+	'code/app/tickets_for_sale_app.cpp',
 	'code/menus/base_menu.cpp',
 	'code/menus/game_state.cpp',
 	'code/menus/barter_menu.cpp',
@@ -42,11 +35,11 @@ srcs = [
 	'code/menus/settings_manager.cpp',
 ]
 
-# Main executable with FTXUI support
-if ftxui_found
-    executable('tickets-for-sale', srcs,
-               dependencies: [json_dep, ftxui_component_dep, ftxui_dom_dep, ftxui_screen_dep],
-               override_options: ['cpp_std=c++17'])
-else
-    executable('tickets-for-sale', srcs, dependencies: [json_dep])
-endif
+#  Create the main executable
+executable(
+	'tickets-for-sale',
+	srcs,
+	dependencies: [json_dep, ftxui_component_dep, ftxui_dom_dep, ftxui_screen_dep],
+	override_options: ['cpp_std=c++17'],
+)
+
