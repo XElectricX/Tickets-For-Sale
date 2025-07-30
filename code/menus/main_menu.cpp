@@ -12,20 +12,19 @@ using namespace ftxui;
 class MainMenu : public BaseMenu
 {
 public:
-  	MainMenu() : BaseMenu("🎫 TICKETS FOR SALE 🎫", "Welcome to the Ticket Trading Game", "main_menu")
+	MainMenu() : BaseMenu("🎫 TICKETS FOR SALE 🎫", "Welcome to the Ticket Trading Game", "main_menu")
 	{
 		// Add menu options with hotkeys
-		add_option("Start New Game", 'n', MENU_TICKET_COUNTER);
+		add_option("Start New Game", 'n', MENU_NEW_GAME);
 		add_option("Load Game", 'l', MENU_LOAD_GAME);
-		add_option("Save Game", 's', MENU_SAVE_GAME);
 		add_option("Exit", 'q', MENU_EXIT);
 
-		set_footer("Use arrow keys, hotkeys [N/L/S/Q], or Enter to select");
+		set_footer("Use arrow keys, hotkeys [N/L/Q], or Enter to select");
 		set_theme_colors(Color::Cyan, Color::White, Color::Yellow, Color::Green);
 	}
 
 protected:
-  	Element create_header() override
+	Element create_header() override
 	{
 		return vbox({text("🎫 TICKETS FOR SALE 🎫") | bold | center | color(Color::Cyan),
 					  text("Welcome to the Ticket Trading Game") | center | color(Color::White),

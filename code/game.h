@@ -24,10 +24,10 @@ struct Game
 
 	//Statistics
 	int total_customers = 0;
-	int total_tickets_sold = 152;
-	int total_tickets_bought = 199;
-	int total_revenue = 15250;
-	int total_expenses = 9950;
+	int total_tickets_sold = 0;
+	int total_tickets_bought = 0;
+	int total_revenue = 0;
+	int total_expenses = 0;
 };
 
 //Global variable for the current game's data

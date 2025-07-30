@@ -36,7 +36,7 @@ int BaseMenu::show()
 {
 
 
-		// Copilot: Actually clear the terminal window before showing the menu (cross-platform)
+	// Copilot: Actually clear the terminal window before showing the menu (cross-platform)
 	#ifdef _WIN32
 		system("cls");
 	#else

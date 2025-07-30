@@ -5,6 +5,7 @@
 #include "code/menus/save_system_menus.h"
 #include "code/menus/save_slot_utils.h"
 #include "code/defines.h"
+#include "code/game.h"
 
 using std::string;
 using std::to_string;
@@ -60,12 +61,14 @@ void SaveSlotMenu::populate_save_slots()
 		auto mod_time = get<2>(slot);
 		const string& fname = get<3>(slot);
 		string slot_text;
+		if (menu_type == SAVE_SLOT_MENU && is_autosave) {
+			continue; // Do not show autosave slots in save menu
+		}
 		if (is_autosave) {
 			if (!fname.empty()) {
 				slot_text = "AUTOSAVE " + to_string(slot_num) + " (" + fname + ")";
-				// Optionally show date/time
 			} else {
-				continue; // skip empty autosave slots
+				continue;
 			}
 		} else {
 			slot_text = "SLOT " + to_string(slot_num) + ": ";
@@ -75,7 +78,7 @@ void SaveSlotMenu::populate_save_slots()
 				slot_text += fname;
 			}
 		}
-		char hotkey = '1' + (display_idx % 9); // 1-9, wrap if >9
+		char hotkey = '1' + (display_idx % 9);
 		int return_value = 100 + display_idx;
 		if (menu_type == LOAD_SLOT_MENU) {
 			add_option(slot_text, hotkey, return_value, [this, display_idx]() { handle_load_selection(display_idx); });
@@ -118,15 +121,26 @@ void SaveSlotMenu::handle_save_selection(int slot_index)
 		return;
 	}
 
-	// TODO: Implement actual saving logic
-	// GameData current_data;
-	// current_data = current_data.read_current_game_state("current_game.json");
-	// saveData(current_data, slot_index + 1);
-
-	// For now, just show a placeholder message
-	std::cout << "Saving to slot " << (slot_index + 1) << std::endl;
-
-	// Refresh the options to show the updated save
+	// Copilot: Implement actual saving logic using saveData and game_data
+	// Only manual slots are shown, so slot_index maps to slot number (1-based)
+	int slot_number = slot_index + 1;
+	GameData data;
+	// Transfer relevant attributes from game_data to GameData
+	data.ticket_data = std::to_string(game_data.ticket_inventory.size());
+	data.TICKET_CLASS_ECONOMY = "0";
+	data.TICKET_CLASS_BUSINESS = "0";
+	data.TICKET_CLASS_LUXURY = "0";
+	data.currency_amount = std::to_string(game_data.money);
+	// Optionally, count ticket classes if needed
+	for (const auto& t : game_data.ticket_inventory) {
+		switch (t.ticket_class) {
+			case Ticket_Class::TICKET_CLASS_ECONOMY: data.TICKET_CLASS_ECONOMY = std::to_string(std::stoi(data.TICKET_CLASS_ECONOMY) + 1); break;
+			case Ticket_Class::TICKET_CLASS_BUSINESS: data.TICKET_CLASS_BUSINESS = std::to_string(std::stoi(data.TICKET_CLASS_BUSINESS) + 1); break;
+			case Ticket_Class::TICKET_CLASS_LUXURY: data.TICKET_CLASS_LUXURY = std::to_string(std::stoi(data.TICKET_CLASS_LUXURY) + 1); break;
+		}
+	}
+	saveData(data, slot_number, false);
+	std::cout << "Game saved to slot " << slot_number << std::endl;
 	populate_save_slots();
 }
 
@@ -157,17 +171,22 @@ void SaveSlotMenu::handle_delete_selection(int slot_index)
 int show_load_game_menu()
 {
 	SaveSlotMenu menu(LOAD_SLOT_MENU);
-	return menu.show();
+	int result = menu.show();
+	//If a slot was selected, load in to the ticket counter menu
+	return result >= 100 ? MENU_TICKET_COUNTER : result;
 }
 
 int show_save_game_menu()
 {
 	SaveSlotMenu menu(SAVE_SLOT_MENU);
-	return menu.show();
+	int result = menu.show();
+	//If a slot was selected, always return MENU_BACK to go to previous menu
+	return result >= 100 ? MENU_BACK : result;
 }
 
 int show_delete_saves_menu()
 {
 	SaveSlotMenu menu(DELETE_SLOT_MENU);
-	return menu.show();
+	int result = menu.show();
+	return result >= 100 ? MENU_BACK : result;
 }

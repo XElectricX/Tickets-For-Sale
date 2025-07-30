@@ -25,6 +25,10 @@ int TicketsForSaleApp::run()
 			menu_result = handle_main_menu();
 			break;
 
+		case MENU_NEW_GAME:
+			menu_result = handle_new_game();
+			break;
+
 		case MENU_TICKET_COUNTER:
 			menu_result = handle_ticket_counter();
 			break;
@@ -101,6 +105,11 @@ void TicketsForSaleApp::handle_menu_transition(int menu_result)
 int TicketsForSaleApp::handle_main_menu()
 {
 	return show_main_menu();
+}
+
+int TicketsForSaleApp::handle_new_game()
+{
+	return show_new_game_menu();
 }
 
 int TicketsForSaleApp::handle_ticket_counter()

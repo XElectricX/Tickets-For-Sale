@@ -14,48 +14,6 @@ using namespace std;
 
 vector<string> save_slot_index;
 
-// Copilot: Reads the current game state from a JSON file (autosave) and prints the loaded values.
-GameData GameData::read_current_game_state(const string& filename)
-{
-	GameData data;
-	ifstream file(filename);
-	if(file.is_open())
-	{
-		json j;
-		file >> j;
-		file.close();
-
-		// Copilot: Extract each field from the JSON if it exists
-		if(j.contains("current_day"))
-			data.current_day = j["current_day"];
-		if(j.contains("ticket_data"))
-			data.ticket_data = j["ticket_data"];
-		if(j.contains("TICKET_CLASS_ECONOMY"))
-			data.TICKET_CLASS_ECONOMY = j["TICKET_CLASS_ECONOMY"];
-		if(j.contains("TICKET_CLASS_BUSINESS"))
-			data.TICKET_CLASS_BUSINESS = j["TICKET_CLASS_BUSINESS"];
-		if(j.contains("TICKET_CLASS_LUXURY"))
-			data.TICKET_CLASS_LUXURY = j["TICKET_CLASS_LUXURY"];
-		if(j.contains("currency_amount"))
-			data.currency_amount = j["currency_amount"];
-
-		// Copilot: Print out the loaded data for debugging/confirmation
-		cout << "\n--- Loaded from autosave ---\n";
-		cout << "Day: " << data.current_day << "\n";
-		cout << "Total Tickets: " << data.ticket_data << "\n";
-		cout << "-Economy Class: " << data.TICKET_CLASS_ECONOMY << "\n";
-		cout << "-Business Class: " << data.TICKET_CLASS_BUSINESS << "\n";
-		cout << "-First Class: " << data.TICKET_CLASS_LUXURY << "\n";
-		cout << "Total Currency: " << data.currency_amount << "\n";
-		cout << "-----------------------------\n";
-	}
-	else
-		cerr << "Could not open file: " << filename << "\n";
-
-	// Copilot: Return the loaded game data (or default if file not found)
-	return data;
-}
-
 // Copilot: Loads GameData from a specific slot in the JSON file.
 // Copilot: Reads the file, finds the slot, and populates the GameData struct.
 GameData GameData::loadData(const string& filename, const string& slot_name)
@@ -71,7 +29,6 @@ GameData GameData::loadData(const string& filename, const string& slot_name)
 		if(j.contains(slot_name))
 		{
 			auto slot = j[slot_name];
-			data.current_day = slot["current_day"];
 			data.ticket_data = slot["ticket_data"];
 			data.TICKET_CLASS_ECONOMY = slot["TICKET_CLASS_ECONOMY"];
 			data.TICKET_CLASS_BUSINESS = slot["TICKET_CLASS_BUSINESS"];
@@ -116,7 +73,6 @@ void update_save_slot_index()
 				print("Slot: " + to_string(i) + " (USED)\n");
 				if(value.is_object())
 				{
-					cout << " | Day " << value["current_day"] << "\n";
 					cout << " | Total Tickets : " << value["ticket_data"] << "\n";
 					cout << " | Economy: " << value["TICKET_CLASS_ECONOMY"] << "\n";
 					cout << " | Business: " << value["TICKET_CLASS_BUSINESS"] << "\n";
@@ -140,7 +96,6 @@ void update_save_slot_index()
 				print("Autosave: " + to_string(i) + " (USED)\n");
 				if(value.is_object())
 				{
-					cout << " | Day " << value["current_day"] << "\n";
 					cout << " | Total Tickets : " << value["ticket_data"] << "\n";
 					cout << " | Economy: " << value["TICKET_CLASS_ECONOMY"] << "\n";
 					cout << " | Business: " << value["TICKET_CLASS_BUSINESS"] << "\n";
@@ -193,7 +148,6 @@ void saveData(const GameData& data, int slot_number, bool is_autosave)
 	// Copilot: Prepare the JSON object for saving
 	json j;
 
-	j["current_day"] = data.current_day;
 	j["ticket_data"] = data.ticket_data;
 	j["TICKET_CLASS_ECONOMY"] = data.TICKET_CLASS_ECONOMY;
 	j["TICKET_CLASS_BUSINESS"] = data.TICKET_CLASS_BUSINESS;

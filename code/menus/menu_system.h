@@ -7,6 +7,7 @@ class BaseMenu;
 
 // Menu function declarations
 int show_main_menu();
+int show_new_game_menu();
 int show_ticket_counter_menu();
 int show_ticket_inventory_menu();
 int show_ticket_purchasing_menu();
@@ -28,6 +29,7 @@ enum MenuResult
 	MENU_START_GAME = 10,
 	MENU_LOAD_GAME = 11,
 	MENU_SAVE_GAME = 12,
+	MENU_NEW_GAME = 13,
 
 	// Game menus
 	MENU_TICKET_COUNTER = 20,

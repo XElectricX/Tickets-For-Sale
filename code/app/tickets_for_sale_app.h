@@ -28,6 +28,7 @@ private:
 
 	// Menu handlers - much cleaner than switch statements
 	int handle_main_menu();
+	int handle_new_game();
 	int handle_ticket_counter();
 	int handle_inventory();
 	int handle_purchase();

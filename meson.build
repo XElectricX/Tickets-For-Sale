@@ -23,6 +23,7 @@ srcs = [
 	'code/menus/base_menu.cpp',
 	'code/menus/barter_menu.cpp',
 	'code/menus/main_menu.cpp',
+	'code/menus/new_game_menu.cpp',
 	'code/menus/save_system_menus.cpp',
 	'code/menus/ticket_counter_menu.cpp',
 	'code/menus/ticket_inventory_menu.cpp',
