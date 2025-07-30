@@ -10,11 +10,14 @@
 #include "code/menus/menu_system.h"
 #include "code/save_system.h"
 #include "code/app/tickets_for_sale_app.h"
+#include "code/game.h"
 
 using std::ofstream;
 using std::string;
 using std::to_string;
 using json = nlohmann::json;
+
+Game game_data;
 
 // Test function to debug ticket lists
 void debug_ticket_list(const vector<Ticket> &tickets)

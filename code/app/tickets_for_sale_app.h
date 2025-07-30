@@ -11,28 +11,27 @@
 class TicketsForSaleApp
 {
 public:
-    TicketsForSaleApp();
-    ~TicketsForSaleApp();
+	TicketsForSaleApp();
+	~TicketsForSaleApp();
 
-    // Main application entry point
-    int run();
+	// Main application entry point
+	int run();
 
 private:
-    bool running;
-    int current_menu;
+	bool running;
+	int current_menu;
 
-    // Clean menu navigation methods
-    void handle_menu_transition(int menu_result);
-    void initialize_game();
-    void cleanup();
+	// Clean menu navigation methods
+	void handle_menu_transition(int menu_result);
+	void initialize_game();
+	void cleanup();
 
-    // Menu handlers - much cleaner than switch statements
-    int handle_main_menu();
-    int handle_ticket_counter();
-    int handle_inventory();
-    int handle_purchase();
-    int handle_barter();
-    int handle_statistics();
-    int handle_save_game();
-    int handle_load_game();
+	// Menu handlers - much cleaner than switch statements
+	int handle_main_menu();
+	int handle_ticket_counter();
+	int handle_inventory();
+	int handle_purchase();
+	int handle_barter();
+	int handle_save_game();
+	int handle_load_game();
 };

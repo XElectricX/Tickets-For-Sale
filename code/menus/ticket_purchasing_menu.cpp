@@ -6,16 +6,9 @@
 #include <string>
 #include "menu_system.h"
 #include "base_menu.h"
+#include "code/game.h"
 
 using namespace ftxui;
-
-// Sample ticket data - in a real implementation this would come from game state
-std::vector<std::string> available_tickets = {
-    "Concert Tickets - Rock Festival ($35 each) - Available: 50",
-    "Movie Tickets - New Release ($12 each) - Available: 100",
-    "Sports Tickets - Football Game ($25 each) - Available: 30",
-    "Theater Tickets - Musical ($60 each) - Available: 15",
-    "Festival Passes - Food Festival ($20 each) - Available: 75"};
 
 class TicketPurchasingMenu : public BaseMenu
 {
@@ -30,8 +23,11 @@ public:
         add_option("View Purchase History", 'h', MENU_PURCHASE);
         add_option("Back to Counter", 'b', MENU_TICKET_COUNTER); // Changed to go back to ticket counter
 
-        add_status_info("Funds: $5,000");
-        add_status_info("Storage Space: 84%");
+        // Copilot: Add business, player, money, and total tickets purchased
+        add_status_info("🏢 Business: " + game_data.business_name);
+        add_status_info("🧑 Player: " + game_data.player_name);
+        add_status_info("💰 Money: $" + std::to_string(game_data.money));
+        add_status_info("🛒 Total Purchased: " + std::to_string(game_data.total_tickets_bought));
 
         set_footer("Use arrow keys, hotkeys [C/M/S/T/F/H/B], or Enter to select");
         set_theme_colors(Color::Green, Color::White, Color::Yellow, Color::Cyan);
@@ -40,11 +36,12 @@ public:
 protected:
     Element create_menu_content() override
     {
-        // Create available tickets display
+        // Copilot: Display tickets available for purchase from tickets_for_sale
         Elements ticket_elements;
-        for (const auto &ticket : available_tickets)
+        for (const auto &datum : game_data.tickets_for_sale)
         {
-            ticket_elements.push_back(text("• " + ticket));
+            std::string info = datum.route + " ($" + std::to_string(datum.price) + " each) - Available: " + std::to_string(datum.amount_available);
+            ticket_elements.push_back(text("• " + info));
         }
 
         return vbox({text("Available from Suppliers:") | bold,

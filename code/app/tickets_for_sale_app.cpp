@@ -41,10 +41,6 @@ int TicketsForSaleApp::run()
 			menu_result = handle_barter();
 			break;
 
-		case MENU_STATISTICS:
-			menu_result = handle_statistics();
-			break;
-
 		case MENU_SAVE_GAME:
 			menu_result = handle_save_game();
 			break;
@@ -127,21 +123,12 @@ int TicketsForSaleApp::handle_barter()
 	return show_barter_menu();
 }
 
-int TicketsForSaleApp::handle_statistics()
-{
-	return show_statistics_menu();
-}
-
 int TicketsForSaleApp::handle_save_game()
 {
-	std::cout << "Saving game..." << std::endl;
-	// Implement save functionality
-	return MENU_START_GAME; // Return to main menu
+	return show_save_game_menu();
 }
 
 int TicketsForSaleApp::handle_load_game()
 {
-	std::cout << "Loading game..." << std::endl;
-	// Implement load functionality
-	return MENU_TICKET_COUNTER; // Go to game after loading
+	return show_load_game_menu();
 }

@@ -6,6 +6,8 @@
 #include <string>
 #include "menu_system.h"
 #include "base_menu.h"
+#include "code/game.h"
+#include "code/objects/customers.h"
 
 using namespace ftxui;
 
@@ -14,12 +16,19 @@ class BarterMenu : public BaseMenu
 public:
     BarterMenu() : BaseMenu("🤝 BARTER & SALES", "Customer Negotiations")
     {
-        add_option("Negotiate with Sarah", 's', MENU_BARTER);
-        add_option("Negotiate with Mike", 'm', MENU_BARTER);
-        add_option("Negotiate with Jenny", 'j', MENU_BARTER);
-        add_option("Negotiate with Bob", 'o', MENU_BARTER);
+        // Copilot: Add business, player, money, and total tickets sold to status info
+        add_status_info("🏢 Business: " + game_data.business_name);
+        add_status_info("🧑 Player: " + game_data.player_name);
+        add_status_info("💰 Money: $" + std::to_string(game_data.money));
+        add_status_info("🎟️ Total Sold: " + std::to_string(game_data.total_tickets_sold));
+
+        //Iterate through available customers and add options
+        for (const auto &customer : game_data.customers)
+        {
+            add_option("Negotiate with " + customer.name, customer.name[0], MENU_BARTER);
+        }
         add_option("View Sales History", 'h', MENU_BARTER);
-        add_option("Back to Counter", 'b', MENU_TICKET_COUNTER); // Changed to go back to ticket counter
+        add_option("Back to Counter", 'b', MENU_TICKET_COUNTER);
 
         set_footer("Use arrow keys, hotkeys [S/M/J/O/H/B], or Enter to select");
         set_theme_colors(Color::Green, Color::White, Color::Yellow, Color::Cyan);
@@ -28,18 +37,22 @@ public:
 protected:
     Element create_menu_content() override
     {
-        // Current customers waiting
-        std::vector<std::string> customers = {
-            "Sarah - Wants: Concert Tickets (Willing to pay: $50)",
-            "Mike - Wants: Movie Tickets (Willing to pay: $18)",
-            "Jenny - Wants: Sports Tickets (Willing to pay: $35)",
-            "Bob - Wants: Theater Tickets (Willing to pay: $80)"};
+
+        // Copilot: Use the new Customer class for customer data
+        #include "code/objects/customers.h"
+        std::vector<Customer> customers = {
+            Customer("Sarah", 50.0, 28, 100, 2, "Concert", 3, 4),
+            Customer("Mike", 18.0, 22, 90, 1, "Movie", 2, 2),
+            Customer("Jenny", 35.0, 31, 120, 3, "Sports", 4, 5),
+            Customer("Bob", 80.0, 45, 110, 1, "Theater", 1, 3)
+        };
 
         // Create customer list display
         Elements customer_elements;
         for (const auto &customer : customers)
         {
-            customer_elements.push_back(text("• " + customer));
+            std::string info = customer.name + " - Wants: " + customer.preferred_ticket_class + " Tickets (Willing to pay: $" + std::to_string(static_cast<int>(customer.money)) + ")";
+            customer_elements.push_back(text("• " + info));
         }
 
         return vbox({text("👥 CUSTOMERS WAITING") | bold | color(Color::GreenLight),
@@ -53,9 +66,9 @@ protected:
 
     Element create_status_bar() override
     {
-        return hbox({text("💰 Today's Sales: $" + std::to_string(g_game_state.daily_revenue)) | color(Color::Green),
+        return hbox({text("💰 Total Revenue: $" + std::to_string(game_data.total_revenue)) | color(Color::Green),
                      text("  |  "),
-                     text("👥 Customers Served: " + std::to_string(g_game_state.tickets_sold_today)) | color(Color::Blue),
+                     text("👥 Customers Served: " + std::to_string(game_data.total_customers)) | color(Color::Blue),
                      text("  |  "),
                      text("💼 Active Negotiations: 4") | color(Color::Yellow)}) |
                center;

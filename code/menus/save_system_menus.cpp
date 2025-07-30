@@ -3,10 +3,12 @@
 #include "code/save_system.h"
 #include "code/helpers.h"
 #include "code/menus/save_system_menus.h"
+#include "code/menus/save_slot_utils.h"
 #include "code/defines.h"
 
 using std::string;
 using std::to_string;
+using std::get;
 
 SaveSlotMenu::SaveSlotMenu(const string &type)
 	: BaseMenu("", "", "save_slot_menu"), menu_type(type)
@@ -48,42 +50,43 @@ Element SaveSlotMenu::create_header()
 
 void SaveSlotMenu::populate_save_slots()
 {
-	update_save_slot_index();
 
-	// Add save slots as options
-	for (size_t i = 0; i < save_slot_index.size() && i < MAX_SAVE_SLOTS; ++i)
-	{
-		string slot_text = "Slot " + to_string(i + 1) + ": ";
-		if (save_slot_index[i].empty() || save_slot_index[i] == "Empty")
-		{
-			slot_text += "[Empty]";
+	string save_folder = "save data";
+	auto slots = get_all_save_slots(save_folder, MAX_SAVE_SLOTS, MAX_AUTO_SAVE_SLOTS);
+	int display_idx = 0;
+	for (const auto& slot : slots) {
+		bool is_autosave = get<0>(slot);
+		int slot_num = get<1>(slot);
+		auto mod_time = get<2>(slot);
+		const string& fname = get<3>(slot);
+		string slot_text;
+		if (is_autosave) {
+			if (!fname.empty()) {
+				slot_text = "AUTOSAVE " + to_string(slot_num) + " (" + fname + ")";
+				// Optionally show date/time
+			} else {
+				continue; // skip empty autosave slots
+			}
+		} else {
+			slot_text = "SLOT " + to_string(slot_num) + ": ";
+			if (fname.empty()) {
+				slot_text += "EMPTY";
+			} else {
+				slot_text += fname;
+			}
 		}
-		else
-		{
-			slot_text += save_slot_index[i];
+		char hotkey = '1' + (display_idx % 9); // 1-9, wrap if >9
+		int return_value = 100 + display_idx;
+		if (menu_type == LOAD_SLOT_MENU) {
+			add_option(slot_text, hotkey, return_value, [this, display_idx]() { handle_load_selection(display_idx); });
+		} else if (menu_type == SAVE_SLOT_MENU) {
+			add_option(slot_text, hotkey, return_value, [this, display_idx]() { handle_save_selection(display_idx); });
+		} else if (menu_type == DELETE_SLOT_MENU) {
+			add_option(slot_text, hotkey, return_value, [this, display_idx]() { handle_delete_selection(display_idx); });
 		}
-
-		char hotkey = '1' + static_cast<char>(i);
-		int return_value = 100 + static_cast<int>(i); // Use 100+ for slot indices
-
-		if (menu_type == LOAD_SLOT_MENU)
-		{
-			add_option(slot_text, hotkey, return_value, [this, i]()
-					   { handle_load_selection(static_cast<int>(i)); });
-		}
-		else if (menu_type == SAVE_SLOT_MENU)
-		{
-			add_option(slot_text, hotkey, return_value, [this, i]()
-					   { handle_save_selection(static_cast<int>(i)); });
-		}
-		else if (menu_type == DELETE_SLOT_MENU)
-		{
-			add_option(slot_text, hotkey, return_value, [this, i]()
-					   { handle_delete_selection(static_cast<int>(i)); });
-		}
+		++display_idx;
 	}
 
-	// Add back option
 	add_option("Back to Main Menu", 'b', MENU_START_GAME);
 }
 

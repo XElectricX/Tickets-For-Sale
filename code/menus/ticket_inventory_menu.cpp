@@ -6,16 +6,9 @@
 #include <string>
 #include "menu_system.h"
 #include "base_menu.h"
+#include "code/game.h"
 
 using namespace ftxui;
-
-// Sample ticket data - in a real implementation this would come from game state
-std::vector<std::string> ticket_list = {
-    "Concert Tickets - Pop Festival ($45) - Stock: 12",
-    "Movie Tickets - Action Movie ($15) - Stock: 25",
-    "Sports Tickets - Baseball Game ($30) - Stock: 8",
-    "Theater Tickets - Broadway Show ($75) - Stock: 3",
-    "Amusement Park Passes ($25) - Stock: 18"};
 
 class TicketInventoryMenu : public BaseMenu
 {
@@ -37,11 +30,12 @@ public:
 protected:
     Element create_menu_content() override
     {
-        // Create ticket inventory display with the ticket list
+        // Copilot: Display tickets from the player's inventory
         Elements ticket_elements;
-        for (const auto &ticket : ticket_list)
+        for (const auto &ticket : game_data.ticket_inventory)
         {
-            ticket_elements.push_back(text("• " + ticket));
+            std::string info = ticket.route + " ($" + std::to_string(ticket.price_paid) + ") - Class: " + std::to_string(static_cast<int>(ticket.ticket_class));
+            ticket_elements.push_back(text("• " + info));
         }
 
         return vbox({text("Current Stock:") | bold,
