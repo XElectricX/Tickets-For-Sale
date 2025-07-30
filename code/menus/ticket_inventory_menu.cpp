@@ -30,7 +30,7 @@ public:
 protected:
     Element create_menu_content() override
     {
-        // Copilot: Display tickets from the player's inventory
+        //Display tickets from the player's inventory
         Elements ticket_elements;
         for (const auto &ticket : game_data.ticket_inventory)
         {

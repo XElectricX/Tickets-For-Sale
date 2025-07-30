@@ -8,44 +8,36 @@
 #include <nlohmann/json.hpp>
 #include "helpers.h"
 #include "defines.h"
+#include "game.h"
+#include "objects/tickets.h"
+#include "objects/customers.h"
+#include "serialization.h"
 
 using json = nlohmann::json;
 using namespace std;
 
 vector<string> save_slot_index;
 
-// Copilot: Loads GameData from a specific slot in the JSON file.
-// Copilot: Reads the file, finds the slot, and populates the GameData struct.
-GameData GameData::loadData(const string& filename, const string& slot_name)
+//Loads Game data from a supplied JSON file
+void loadData(const string& filename, const string& slot_name)
 {
-	GameData data;
 	ifstream file(filename);
 	if(file.is_open())
 	{
 		json j;
 		file >> j;
-
-		// Copilot: Check if the requested slot exists
-		if(j.contains(slot_name))
-		{
-			auto slot = j[slot_name];
-			data.ticket_data = slot["ticket_data"];
-			data.TICKET_CLASS_ECONOMY = slot["TICKET_CLASS_ECONOMY"];
-			data.TICKET_CLASS_BUSINESS = slot["TICKET_CLASS_BUSINESS"];
-			data.TICKET_CLASS_LUXURY = slot["TICKET_CLASS_LUXURY"];
-			data.currency_amount = slot["currency_amount"];
-			cout << "Data loaded from slot: " << slot_name << "\n";
+		// Each file is a single Game object, so just deserialize directly
+		try {
+			game_data = j.get<Game>();
+		} catch (const std::exception& e) {
+			cerr << "Failed to load game data: " << e.what() << "\n";
 		}
-		else
-			cerr << "Slot " << slot_name << " not found.\n";
-
 		file.close();
 	}
 	else
+	{
 		cerr << "The file could not be loaded.\n";
-
-	// Copilot: Return the loaded data (or default if not found)
-	return data;
+	}
 }
 
 
@@ -56,10 +48,10 @@ void update_save_slot_index()
 
 	save_slot_index.clear();
 
-	// Copilot: Check for both manual saves (slot[number].json) and autosaves (autosave[number].json)
+	//Check for both manual saves (slot[number].json) and autosaves (autosave[number].json)
 	for(int i = 1; i <= MAX_SAVE_SLOTS; ++i)
 	{
-		// Copilot: Check manual save
+		//Check manual save
 		string manual_filepath = save_folder + "/slot" + to_string(i) + ".json";
 		if(filesystem::exists(manual_filepath))
 		{
@@ -82,7 +74,7 @@ void update_save_slot_index()
 			}
 		}
 
-		// Copilot: Check autosave
+		//Check autosave
 		string autosave_filepath = save_folder + "/autosave" + to_string(i) + ".json";
 		if(filesystem::exists(autosave_filepath))
 		{
@@ -113,15 +105,12 @@ void update_save_slot_index()
 	std::sort(save_slot_index.begin(), save_slot_index.end());
 }
 
-// Copilot: Saves the provided GameData to an individual file for each slot in the 'save data' directory.
-// Copilot: The file is named 'slot[slot_number].json' and stored in 'save data/'.
-// Copilot: Prompts the user if overwriting an existing slot file, except for autosaves.
-void saveData(const GameData& data, int slot_number, bool is_autosave)
+
+// Saves all fields of Game to a JSON file
+void saveData(const Game& data, int slot_number, bool is_autosave)
 {
-	// Copilot: Build the file path for the slot
 	string save_folder = "save data";
 
-	// Copilot: Ensure the save directory exists (C++17 and later)
 	if(!filesystem::exists(save_folder))
 	{
 		filesystem::create_directory(save_folder);
@@ -130,31 +119,22 @@ void saveData(const GameData& data, int slot_number, bool is_autosave)
 	//Naming convention: autosave1, autosave2, etc. for manual saves, while autosaves use autosave1, autosave2, etc.
 	string filepath = save_folder + (is_autosave ? "/autosave" : "/slot") + to_string(slot_number) + ".json";
 
-	// Copilot: For manual saves, prompt if overwriting. For autosaves, always overwrite.
-	if(!is_autosave && filesystem::exists(filepath))
-	{
-		char confirm;
-
-		cout << "Slot '" << slot_number << "' already has a save. Do you want to overwrite it? (y/n): ";
-		cin >> confirm;
-
-		if(confirm != 'y' && confirm != 'Y')
-		{
-			print("Save cancelled.\n");
-			return;
-		}
-	}
-
-	// Copilot: Prepare the JSON object for saving
+	//Prepare the JSON object for saving
 	json j;
+	// Save all fields in GameData
+	j["money"] = game_data.money;
+	j["player_name"] = game_data.player_name;
+	j["business_name"] = game_data.business_name;
+	j["money"] = game_data.money;
+	j["ticket_inventory"] = game_data.ticket_inventory;
+	j["tickets_for_sale"] = game_data.tickets_for_sale;
+	j["customers"] = game_data.customers;
+	j["total_customers"] = game_data.total_customers;
+	j["total_tickets_sold"] = game_data.total_tickets_sold;
+	j["total_tickets_bought"] = game_data.total_tickets_bought;
+	j["total_revenue"] = game_data.total_revenue;
+	j["total_expenses"] = game_data.total_expenses;
 
-	j["ticket_data"] = data.ticket_data;
-	j["TICKET_CLASS_ECONOMY"] = data.TICKET_CLASS_ECONOMY;
-	j["TICKET_CLASS_BUSINESS"] = data.TICKET_CLASS_BUSINESS;
-	j["TICKET_CLASS_LUXURY"] = data.TICKET_CLASS_LUXURY;
-	j["currency_amount"] = data.currency_amount;
-
-	// Copilot: Write the JSON data to the slot file
 	ofstream file(filepath);
 
 	if(file.is_open())
@@ -169,9 +149,11 @@ void saveData(const GameData& data, int slot_number, bool is_autosave)
 		print("File could not be saved.\n");
 }
 
-// Copilot: Autosave function that saves the provided GameData to the next autosave slot, rotating and overwriting the oldest if needed.
-void autosaveGameData(const GameData& data)
+//Autosave function that saves the provided Game to the next autosave slot, rotating and overwriting the oldest if needed.
+void autosaveGameData(const Game& data)
 {
+	update_save_slot_index();
+
 	if(save_slot_index.empty())
 	{
 		//There don't appear to be any save slots, so just use the first autosave slot

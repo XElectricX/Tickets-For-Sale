@@ -1,5 +1,8 @@
+#include <random>
+#include <sstream>
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include <vector>
 #include <fstream>
 #include <stdexcept>
@@ -11,6 +14,7 @@
 #include "code/save_system.h"
 #include "code/app/tickets_for_sale_app.h"
 #include "code/game.h"
+#include "code/objects/customers.h"
 
 using std::ofstream;
 using std::string;
@@ -18,6 +22,35 @@ using std::to_string;
 using json = nlohmann::json;
 
 Game game_data;
+
+// Helper: Generate a random ticket inventory
+std::vector<Ticket> random_ticket_inventory(std::mt19937& rng) {
+	std::vector<Ticket> tickets;
+	std::vector<std::pair<Ticket_Class, string>> routes = {
+		{Ticket_Class::TICKET_CLASS_ECONOMY, "New York to Los Angeles"},
+		{Ticket_Class::TICKET_CLASS_BUSINESS, "Chicago to Miami"},
+		{Ticket_Class::TICKET_CLASS_LUXURY, "San Francisco to Paris"},
+		{Ticket_Class::TICKET_CLASS_ECONOMY, "Dallas to Seattle"},
+		{Ticket_Class::TICKET_CLASS_BUSINESS, "Boston to London"}
+	};
+	int num_tickets = 3 + (rng() % 4); // 3-6 tickets
+	for (int i = 0; i < num_tickets; ++i) {
+		auto& r = routes[rng() % routes.size()];
+		int price = 50 + (rng() % 200);
+		tickets.emplace_back(r.first, price, r.second);
+	}
+	return tickets;
+}
+
+// Helper: Fill game_data with random customers and tickets
+void fill_game_with_random_data(Game& g, const NameLists& names, std::mt19937& rng) {
+	g.customers.clear();
+	for (int i = 0; i < MAX_CUSTOMERS_AT_ONCE; ++i)
+	{
+		g.customers.push_back(random_customer(names, rng));
+	}
+	g.ticket_inventory = random_ticket_inventory(rng);
+}
 
 // Test function to debug ticket lists
 void debug_ticket_list(const vector<Ticket> &tickets)
@@ -28,41 +61,30 @@ void debug_ticket_list(const vector<Ticket> &tickets)
 	}
 }
 
-// Copilot: Creates an example GameData object and autosaves it using the autosave function.
-void writeExampleAutoSave()
-{
-	GameData example_data =
-		{
-			"3",   // game_date
-			"60",  // ticket_data (Total Tickets)
-			"30",  // TICKET_CLASS_ECONOMY
-			"20",  // TICKET_CLASS_BUSINESS
-			"10",  // TICKET_CLASS_LUXURY
-			"500", // currency_amount
-		};
-
-	// Copilot: Call the autosave function to save the example data
-	autosaveGameData(example_data);
-
-	print("Example auto-save data written using autosave function.\n");
-}
-
 // Initialize test data for development
 void initialize_test_data()
 {
-	std::cout << "=== TICKETS FOR SALE GAME ===" << std::endl;
-	std::cout << "Initializing game with sample tickets..." << std::endl;
+	print("Initializing game with random test data...");
+	std::random_device rd;
+	std::mt19937 rng(rd());
+	NameLists names = read_customer_names("customer_names.txt");
+	fill_game_with_random_data(game_data, names, rng);
+	print("Customers:");
+	for (const auto& c : game_data.customers) {
+		print("- " + c.name + ", $" + std::to_string(c.money) + ", " + c.preferred_ticket_class);
+	}
+	print("Tickets:");
+	for (const auto& t : game_data.ticket_inventory) {
+		print("- " + t.route + ", $" + std::to_string(t.price_paid));
+	}
 
-	// Copilot: Test declaration of a ticket datum and creation of a ticket
-	Ticket_Datum ticket_datum(Ticket_Class::TICKET_CLASS_ECONOMY, "New York to Los Angeles", 300, 10);
-	vector<Ticket> tickets = ticket_datum.create_ticket(5);
+	//Do an autosave to save the test values
+	autosaveGameData(game_data);
 
-	debug_ticket_list(tickets);
+	//Reset the game_data back to default
+	game_data = Game();
 
-	// Copilot: Test the autosave system with example data
-	writeExampleAutoSave();
-
-	std::cout << "\nStarting game interface..." << std::endl;
+	print("Test initialization complete. Game interface starting...\n");
 }
 
 int main(int argc, char *argv[])
@@ -70,7 +92,7 @@ int main(int argc, char *argv[])
 	try
 	{
 		// Initialize test data (remove this in production)
-		initialize_test_data();
+		//initialize_test_data();
 
 		// Create and run the main application
 		TicketsForSaleApp app;

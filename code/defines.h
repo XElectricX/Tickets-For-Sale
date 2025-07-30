@@ -11,6 +11,8 @@ enum class Ticket_Class
 #define MAX_SAVE_SLOTS 5
 #define MAX_AUTO_SAVE_SLOTS 3
 
+#define MAX_CUSTOMERS_AT_ONCE 5
+
 #define MAIN_MENU "Main Menu"
 #define LOAD_SLOT_MENU "Load Slot Menu"
 #define SAVE_SLOT_MENU "Save Slot Menu"

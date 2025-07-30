@@ -23,7 +23,7 @@ public:
         add_option("View Purchase History", 'h', MENU_PURCHASE);
         add_option("Back to Counter", 'b', MENU_TICKET_COUNTER); // Changed to go back to ticket counter
 
-        // Copilot: Add business, player, money, and total tickets purchased
+        //Add business, player, money, and total tickets purchased
         add_status_info("🏢 Business: " + game_data.business_name);
         add_status_info("🧑 Player: " + game_data.player_name);
         add_status_info("💰 Money: $" + std::to_string(game_data.money));
@@ -36,7 +36,7 @@ public:
 protected:
     Element create_menu_content() override
     {
-        // Copilot: Display tickets available for purchase from tickets_for_sale
+        //Display tickets available for purchase from tickets_for_sale
         Elements ticket_elements;
         for (const auto &datum : game_data.tickets_for_sale)
         {

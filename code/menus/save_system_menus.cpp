@@ -95,23 +95,42 @@ void SaveSlotMenu::populate_save_slots()
 
 void SaveSlotMenu::handle_load_selection(int slot_index)
 {
-	if (slot_index < 0 || slot_index >= static_cast<int>(save_slot_index.size()))
+	// Instead of using slot_index directly, search for the Nth non-empty slot
+	if (slot_index < 0)
 	{
 		return;
 	}
 
-	if (save_slot_index[slot_index].empty() || save_slot_index[slot_index] == "Empty")
+	std::string filepath = "";
+	for (const auto& fname : save_slot_index)
 	{
-		// Could add error handling here - for now just return
+		if (!fname.empty() && fname != "Empty")
+		{
+			//Check the number after "slot" in the filename
+			std::string file = fname.substr(fname.find_last_of("/\\") + 1);
+			size_t found = file.find("slot");
+			if(found == std::string::npos)
+			{
+				continue; // Not a valid save slot filename
+			}
+
+			filepath = fname;
+			}
+		}
+
+	if (filepath.empty())
+	{
+		// No valid file found for this slot index
 		return;
 	}
 
-	// TODO: Implement actual loading logic
-	// GameData data;
-	// data.loadData("save_data.json", save_slot_index[slot_index]);
-
-	// For now, just show a placeholder message
-	std::cout << "Loading from slot " << (slot_index + 1) << ": " << save_slot_index[slot_index] << std::endl;
+	// The slot name is the filename without the path and extension
+	std::string slot_name = filepath.substr(filepath.find_last_of("/\\") + 1);
+	size_t dot = slot_name.find_last_of('.');
+	if (dot != std::string::npos) {
+		slot_name = slot_name.substr(0, dot);
+	}
+	loadData(filepath, slot_name);
 }
 
 void SaveSlotMenu::handle_save_selection(int slot_index)
@@ -121,26 +140,10 @@ void SaveSlotMenu::handle_save_selection(int slot_index)
 		return;
 	}
 
-	// Copilot: Implement actual saving logic using saveData and game_data
+	//Implement actual saving logic using saveData and game_data
 	// Only manual slots are shown, so slot_index maps to slot number (1-based)
 	int slot_number = slot_index + 1;
-	GameData data;
-	// Transfer relevant attributes from game_data to GameData
-	data.ticket_data = std::to_string(game_data.ticket_inventory.size());
-	data.TICKET_CLASS_ECONOMY = "0";
-	data.TICKET_CLASS_BUSINESS = "0";
-	data.TICKET_CLASS_LUXURY = "0";
-	data.currency_amount = std::to_string(game_data.money);
-	// Optionally, count ticket classes if needed
-	for (const auto& t : game_data.ticket_inventory) {
-		switch (t.ticket_class) {
-			case Ticket_Class::TICKET_CLASS_ECONOMY: data.TICKET_CLASS_ECONOMY = std::to_string(std::stoi(data.TICKET_CLASS_ECONOMY) + 1); break;
-			case Ticket_Class::TICKET_CLASS_BUSINESS: data.TICKET_CLASS_BUSINESS = std::to_string(std::stoi(data.TICKET_CLASS_BUSINESS) + 1); break;
-			case Ticket_Class::TICKET_CLASS_LUXURY: data.TICKET_CLASS_LUXURY = std::to_string(std::stoi(data.TICKET_CLASS_LUXURY) + 1); break;
-		}
-	}
-	saveData(data, slot_number, false);
-	std::cout << "Game saved to slot " << slot_number << std::endl;
+	saveData(game_data, slot_number, false);
 	populate_save_slots();
 }
 

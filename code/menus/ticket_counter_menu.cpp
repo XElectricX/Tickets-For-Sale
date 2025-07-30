@@ -22,7 +22,7 @@ public:
         add_option("Save Game", 'g', MENU_SAVE_GAME);
         add_option("Back to Main Menu", 'b', MENU_START_GAME); // Changed to go back to main menu properly
 
-        // Copilot: Status info now shown in status bar below, using game_data fields
+        //Status info now shown in status bar below, using game_data fields
 
         set_footer("Use arrow keys, hotkeys [I/P/S/T/G/B], or Enter to select");
         set_theme_colors(Color::Green, Color::White, Color::Yellow, Color::Cyan);
@@ -31,7 +31,7 @@ public:
 protected:
     Element create_status_bar() override
     {
-        // Copilot: Show business name, player name, money, and statistics
+        //Show business name, player name, money, and statistics
         std::string profit = std::to_string(game_data.total_revenue - game_data.total_expenses);
         return vbox({
             hbox({

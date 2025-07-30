@@ -20,6 +20,7 @@ public:
 private:
 	bool running;
 	int current_menu;
+	int previous_menu; // Track the previous menu for MENU_BACK
 
 	// Clean menu navigation methods
 	void handle_menu_transition(int menu_result);

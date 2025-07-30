@@ -2,7 +2,7 @@
 #include <iostream>
 
 TicketsForSaleApp::TicketsForSaleApp()
-	: running(true), current_menu(MENU_START_GAME)
+	: running(true), current_menu(MENU_START_GAME), previous_menu(MENU_START_GAME)
 {
 }
 
@@ -86,8 +86,8 @@ void TicketsForSaleApp::handle_menu_transition(int menu_result)
 	switch (menu_result)
 	{
 	case MENU_BACK:
-		// Go back to main menu from any submenu
-		current_menu = MENU_START_GAME;
+		// Go back to the previous menu (not always main menu)
+		current_menu = previous_menu;
 		break;
 
 	case MENU_EXIT:
@@ -95,7 +95,9 @@ void TicketsForSaleApp::handle_menu_transition(int menu_result)
 		break;
 
 	default:
-		// Direct menu transition
+		// Track previous menu before switching
+		if (menu_result != current_menu && menu_result != MENU_BACK && menu_result != MENU_EXIT)
+			previous_menu = current_menu;
 		current_menu = menu_result;
 		break;
 	}

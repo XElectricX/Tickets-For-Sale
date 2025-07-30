@@ -41,7 +41,7 @@ public:
 			}
 		});
 		auto layout = Container::Vertical({input_player, input_business, start_button});
-		// Copilot: Wrap in CatchEvent to ensure button works with Enter and mouse
+		//Wrap in CatchEvent to ensure button works with Enter and mouse
 		auto root = CatchEvent(layout, [&](const Event& event) {
 			if (event == Event::Return && start_button->Active()) {
 				start_button->OnEvent(Event::Return);

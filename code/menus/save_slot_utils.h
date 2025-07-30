@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <tuple>
 
-// Copilot: Utility for advanced save slot ordering
+//Utility for advanced save slot ordering
 // Returns a tuple: (is_autosave, slot_number, last_write_time, filename)
 inline std::vector<std::tuple<bool, int, std::filesystem::file_time_type, std::string>>
 get_all_save_slots(const std::string& save_folder, int max_save_slots, int max_autosave_slots) {

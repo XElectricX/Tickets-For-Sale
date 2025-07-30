@@ -17,6 +17,9 @@ public:
 	//Debug function to display ticket data
 	void test_print() const;
 
+	// Default constructor for JSON deserialization
+	Ticket() : ticket_class(Ticket_Class::TICKET_CLASS_ECONOMY), price_paid(0), route("") {}
+
 	Ticket(Ticket_Class ticket_class, int price_paid, string route);
 };
 
@@ -33,6 +36,8 @@ public:
 
 	vector<Ticket> create_ticket(int amount_to_create);
 
-	//Constructor
+	// Default constructor for JSON deserialization
+	Ticket_Datum() : route(""), price(0), amount_available(0), ticket_class(Ticket_Class::TICKET_CLASS_ECONOMY) {}
+	
 	Ticket_Datum(Ticket_Class ticket_class, string route, int price, int amount_available);
 };
