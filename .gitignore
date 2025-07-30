@@ -46,3 +46,7 @@
 
 # VScode settings
 *.vscode/
+.vs/
+
+# Rider settings
+.idea/
