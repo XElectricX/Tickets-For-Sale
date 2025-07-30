@@ -33,7 +33,6 @@ private:
     int handle_purchase();
     int handle_barter();
     int handle_statistics();
-    int handle_options();
     int handle_save_game();
     int handle_load_game();
 };

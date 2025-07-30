@@ -26,13 +26,11 @@ srcs = [
 	'code/menus/barter_menu.cpp',
 	'code/menus/main_menu.cpp',
 	'code/menus/save_system_menus.cpp',
-	'code/menus/options_menu.cpp',
 	'code/menus/statistics_menu.cpp',
 	'code/menus/ticket_counter_menu.cpp',
 	'code/menus/ticket_inventory_menu.cpp',
 	'code/menus/ticket_purchasing_menu.cpp',
 	'code/menus/menu_state_manager.cpp',
-	'code/menus/settings_manager.cpp',
 ]
 
 #  Create the main executable
