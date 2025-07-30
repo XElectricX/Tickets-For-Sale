@@ -11,7 +11,6 @@
 
 using json = nlohmann::json;
 using namespace std;
-namespace fs = std::filesystem;
 
 
 vector<string> save_slot_index;
@@ -98,16 +97,19 @@ GameData GameData::loadData(const string& filename, const string& slot_name)
 void update_save_slot_index()
 {
 	const string save_folder = "save data";
+
+	save_slot_index.clear();
+
+	// Copilot: Check for both manual saves (slot[number].json) and autosaves (autosave[number].json)
 	for(int i = 1; i <= MAX_SAVE_SLOTS; ++i)
 	{
-		// Copilot: Build the expected file path for this slot
-		string filepath = save_folder + "/" + "slot" + to_string(i) + ".json";
-		if(fs::exists(filepath))
+		// Copilot: Check manual save
+		string manual_filepath = save_folder + "/slot" + to_string(i) + ".json";
+		if(filesystem::exists(manual_filepath))
 		{
-			//File exists, so add to save_slot_index
-			save_slot_index.push_back(filepath);
+			save_slot_index.push_back(manual_filepath);
 
-			ifstream file(filepath);
+			ifstream file(manual_filepath);
 			if(file.is_open())
 			{
 				json value;
@@ -115,7 +117,30 @@ void update_save_slot_index()
 				print("Slot: " + to_string(i) + " (USED)\n");
 				if(value.is_object())
 				{
-					// Copilot: Print out all relevant fields for this save slot
+					cout << " | Day " << value["current_day"] << "\n";
+					cout << " | Total Tickets : " << value["ticket_data"] << "\n";
+					cout << " | Economy: " << value["TICKET_CLASS_ECONOMY"] << "\n";
+					cout << " | Business: " << value["TICKET_CLASS_BUSINESS"] << "\n";
+					cout << " | First Class: " << value["TICKET_CLASS_LUXURY"] << "\n";
+					cout << " | Total Currency: " << value["currency_amount"] << "\n\n";
+				}
+			}
+		}
+
+		// Copilot: Check autosave
+		string autosave_filepath = save_folder + "/autosave" + to_string(i) + ".json";
+		if(filesystem::exists(autosave_filepath))
+		{
+			save_slot_index.push_back(autosave_filepath);
+
+			ifstream file(autosave_filepath);
+			if(file.is_open())
+			{
+				json value;
+				file >> value;
+				print("Autosave: " + to_string(i) + " (USED)\n");
+				if(value.is_object())
+				{
 					cout << " | Day " << value["current_day"] << "\n";
 					cout << " | Total Tickets : " << value["ticket_data"] << "\n";
 					cout << " | Economy: " << value["TICKET_CLASS_ECONOMY"] << "\n";
@@ -143,16 +168,16 @@ void saveData(const GameData& data, int slot_number, bool is_autosave)
 	string save_folder = "save data";
 
 	// Copilot: Ensure the save directory exists (C++17 and later)
-	if(!fs::exists(save_folder))
+	if(!filesystem::exists(save_folder))
 	{
-		fs::create_directory(save_folder);
+		filesystem::create_directory(save_folder);
 	}
 
 	//Naming convention: autosave1, autosave2, etc. for manual saves, while autosaves use autosave1, autosave2, etc.
 	string filepath = save_folder + (is_autosave ? "/autosave" : "/slot") + to_string(slot_number) + ".json";
 
 	// Copilot: For manual saves, prompt if overwriting. For autosaves, always overwrite.
-	if(!is_autosave && fs::exists(filepath))
+	if(!is_autosave && filesystem::exists(filepath))
 	{
 		char confirm;
 
@@ -211,7 +236,7 @@ void autosaveGameData(const GameData& data)
 			autosave_count++;
 
 			//Set the current autosave as the oldest one if it is older than the current oldest
-			if(fs::last_write_time(slot) < fs::last_write_time(oldest_autosave))
+			if(filesystem::last_write_time(slot) < filesystem::last_write_time(oldest_autosave))
 				oldest_autosave = slot;
 		}
 	}

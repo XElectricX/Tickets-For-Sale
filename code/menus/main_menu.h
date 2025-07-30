@@ -6,6 +6,7 @@
 
 using std::string;
 using std::vector;
+using std::unique_ptr;
 
 class Menu
 {
@@ -26,12 +27,14 @@ class Menu
 
 		void run();
 		void display_choices();
-		void pick_choice(int choice);
+		virtual void pick_choice(int choice);
 		void on_zero_option();
 		void exit_menu(Menu* destination_menu);
+
+		virtual ~Menu() = default;
 };
 
-Menu create_or_switch_menu(string menu_type = MAIN_MENU);
+Menu& create_or_switch_menu(string menu_type = MAIN_MENU);
 
 //Global list of existing menu objects
-extern vector<Menu*> menu_list;
+extern vector<unique_ptr<Menu>> menu_list;

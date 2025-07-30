@@ -8,9 +8,10 @@
 
 using std::string;
 using std::to_string;
+using std::unique_ptr;
 
 //Global list of existing menu objects
-vector<Menu*> menu_list;
+vector<unique_ptr<Menu>> menu_list;
 
 // Menu
 void Menu::run()
@@ -80,16 +81,20 @@ void Menu::pick_choice(int choice)
 
 	if (choice == 2)
 	{
-		Menu menu = create_or_switch_menu(LOAD_SLOT_MENU);
-		menu.run();
+		Menu& menu = create_or_switch_menu(LOAD_SLOT_MENU);
+		SaveSlotMenu* load_menu = dynamic_cast<SaveSlotMenu*>(&menu);
+		if(load_menu)
+			load_menu->run();
 		return;
 	}
 
 	if (choice == 3)
 	{
 		//Delete saved games
-		Menu menu = create_or_switch_menu(DELETE_SLOT_MENU);
-		menu.run();
+		Menu& menu = create_or_switch_menu(DELETE_SLOT_MENU);
+		SaveSlotMenu* delete_menu = dynamic_cast<SaveSlotMenu*>(&menu);
+		if(delete_menu)
+			delete_menu->run();
 		return;
 	}
 }
@@ -111,7 +116,7 @@ void Menu::exit_menu(Menu* destination_menu)
 	return;
 }
 
-Menu create_or_switch_menu(string menu_type)
+Menu& create_or_switch_menu(string menu_type)
 {
 	//Check if the menu already exists
 	if(!menu_list.empty())
@@ -126,32 +131,36 @@ Menu create_or_switch_menu(string menu_type)
 		}
 	}
 
+	Menu* new_menu = nullptr;
+
 	//Create menus if they don't exist
 	if(menu_type == MAIN_MENU)
 	{
-		Menu* new_menu = new Menu();
-		menu_list.push_back(new_menu);
-		return *new_menu;
+		new_menu = new Menu();
 	}
 
-	if(menu_type == LOAD_SLOT_MENU)
+	else if(menu_type == LOAD_SLOT_MENU)
 	{
-		SaveSlotMenu* new_menu = new SaveSlotMenu(LOAD_SLOT_MENU);
-		menu_list.push_back(new_menu);
-		return *new_menu;
+		new_menu = new SaveSlotMenu(LOAD_SLOT_MENU);
 	}
 
-	if(menu_type == SAVE_SLOT_MENU)
+	else if(menu_type == SAVE_SLOT_MENU)
 	{
-		SaveSlotMenu* new_menu = new SaveSlotMenu(SAVE_SLOT_MENU);
-		menu_list.push_back(new_menu);
-		return *new_menu;
+		new_menu = new SaveSlotMenu(SAVE_SLOT_MENU);
 	}
 
-	if(menu_type == DELETE_SLOT_MENU)
+	else if(menu_type == DELETE_SLOT_MENU)
 	{
-		SaveSlotMenu* new_menu = new SaveSlotMenu(DELETE_SLOT_MENU);
-		menu_list.push_back(new_menu);
-		return *new_menu;
+		new_menu = new SaveSlotMenu(DELETE_SLOT_MENU);
 	}
+
+	else
+	{
+		// Throw an error for an unknown type to prevent crashes
+		throw std::runtime_error("Attempted to create unknown menu type: " + menu_type);
+	}
+
+	//Add the newly created menu to our list, transferring ownership to the unique_ptr
+	menu_list.push_back(unique_ptr<Menu>(new_menu));
+	return *new_menu;
 }

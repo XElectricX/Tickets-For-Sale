@@ -12,6 +12,9 @@ using std::to_string;
 SaveSlotMenu::SaveSlotMenu(string title)
 {
 	this->title = title;
+	//Saved games are displayed as options programmatically
+	options = {};
+	zero_option = "Back";
 	populate_options();
 };
 

@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
 	writeExampleAutoSave();
 
 	//Create the main menu
-	Menu menu = create_or_switch_menu(MAIN_MENU);
-	menu.run(); // Run the main menu
+	Menu& menu = create_or_switch_menu(MAIN_MENU);
+	menu.run();	//Run the main menu
 
 	return 0;
 }
