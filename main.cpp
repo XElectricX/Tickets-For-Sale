@@ -24,13 +24,15 @@ using json = nlohmann::json;
 Game game_data;
 
 // Helper: Fill game_data with random customers and tickets
-void fill_game_with_random_data(Game& g, const NameLists& names, std::mt19937& rng) {
+void fill_game_with_random_data(Game &g, const NameLists &names, std::mt19937 &rng)
+{
 	g.customers.clear();
 	for (int i = 0; i < MAX_CUSTOMERS_AT_ONCE; ++i)
 	{
 		g.customers.push_back(random_customer(names, rng));
 	}
 	g.ticket_inventory = random_ticket_inventory(rng);
+	g.tickets_for_sale = random_tickets_for_sale(rng);
 }
 
 // Test function to debug ticket lists
@@ -51,18 +53,20 @@ void initialize_test_data()
 	NameLists names = read_customer_names("customer_names.txt");
 	fill_game_with_random_data(game_data, names, rng);
 	print("Customers:");
-	for (const auto& c : game_data.customers) {
+	for (const auto &c : game_data.customers)
+	{
 		print("- " + c.name + ", $" + std::to_string(c.money) + ", " + c.preferred_ticket_class);
 	}
 	print("Tickets:");
-	for (const auto& t : game_data.ticket_inventory) {
+	for (const auto &t : game_data.ticket_inventory)
+	{
 		print("- " + t.route + ", $" + std::to_string(t.price_paid));
 	}
 
-	//Do an autosave to save the test values
+	// Do an autosave to save the test values
 	autosaveGameData(game_data);
 
-	//Reset the game_data back to default
+	// Reset the game_data back to default
 	game_data = Game();
 
 	print("Test initialization complete. Game interface starting...\n");
@@ -73,7 +77,7 @@ int main(int argc, char *argv[])
 	try
 	{
 		// Initialize test data (remove this in production)
-		//initialize_test_data();
+		// initialize_test_data();
 
 		// Create and run the main application
 		TicketsForSaleApp app;

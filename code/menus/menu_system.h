@@ -37,6 +37,9 @@ enum MenuResult
 	MENU_PURCHASE = 22,
 	MENU_BARTER = 23,
 
+	// Special states
+	MENU_BANKRUPTCY = 30,
+
 	// Error states
 	MENU_ERROR = -1
 };
