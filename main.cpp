@@ -23,25 +23,6 @@ using json = nlohmann::json;
 
 Game game_data;
 
-// Helper: Generate a random ticket inventory
-std::vector<Ticket> random_ticket_inventory(std::mt19937& rng) {
-	std::vector<Ticket> tickets;
-	std::vector<std::pair<Ticket_Class, string>> routes = {
-		{Ticket_Class::TICKET_CLASS_ECONOMY, "New York to Los Angeles"},
-		{Ticket_Class::TICKET_CLASS_BUSINESS, "Chicago to Miami"},
-		{Ticket_Class::TICKET_CLASS_LUXURY, "San Francisco to Paris"},
-		{Ticket_Class::TICKET_CLASS_ECONOMY, "Dallas to Seattle"},
-		{Ticket_Class::TICKET_CLASS_BUSINESS, "Boston to London"}
-	};
-	int num_tickets = 3 + (rng() % 4); // 3-6 tickets
-	for (int i = 0; i < num_tickets; ++i) {
-		auto& r = routes[rng() % routes.size()];
-		int price = 50 + (rng() % 200);
-		tickets.emplace_back(r.first, price, r.second);
-	}
-	return tickets;
-}
-
 // Helper: Fill game_data with random customers and tickets
 void fill_game_with_random_data(Game& g, const NameLists& names, std::mt19937& rng) {
 	g.customers.clear();

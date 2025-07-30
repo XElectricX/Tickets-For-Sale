@@ -2,9 +2,12 @@
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
 #include <string>
+#include <random>
 #include "code/game.h"
 #include "base_menu.h"
 #include "menu_system.h"
+#include "code/objects/customers.h"
+#include "code/objects/tickets.h"
 
 using namespace ftxui;
 using std::string;
@@ -65,7 +68,19 @@ public:
 		int result = 0;
 		screen.Loop(renderer);
 		if (start_pressed)
+		{
 			result = MENU_TICKET_COUNTER;
+			std::random_device rd;
+			std::mt19937 rng(rd());
+			NameLists names = read_customer_names("customer_names.txt");
+			game_data.customers.clear();
+			for (int i = 0; i < MAX_CUSTOMERS_AT_ONCE; ++i)
+			{
+				game_data.customers.push_back(random_customer(names, rng));
+			}
+			game_data.ticket_inventory = random_ticket_inventory(rng);
+		}
+
 		else
 			result = MENU_START_GAME;
 		return result;
