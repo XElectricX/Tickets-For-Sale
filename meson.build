@@ -15,6 +15,7 @@ ftxui_screen_dep = dependency('ftxui-screen', fallback: ['ftxui', 'screen_dep'])
 # Source files for the main executable
 srcs = [
 	'main.cpp',
+	'code/game.cpp',
 	'code/helpers.cpp',
 	'code/save_system.cpp',
 	'code/objects/tickets.cpp',
@@ -38,4 +39,3 @@ executable(
 	dependencies: [json_dep, ftxui_component_dep, ftxui_dom_dep, ftxui_screen_dep],
 	override_options: ['cpp_std=c++17'],
 )
-

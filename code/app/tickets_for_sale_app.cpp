@@ -1,4 +1,5 @@
 #include "tickets_for_sale_app.h"
+#include "../game.h"
 #include <iostream>
 
 TicketsForSaleApp::TicketsForSaleApp()
@@ -53,6 +54,10 @@ int TicketsForSaleApp::run()
 			menu_result = handle_load_game();
 			break;
 
+		case MENU_BANKRUPTCY:
+			menu_result = show_bankruptcy_screen();
+			break;
+
 		case MENU_EXIT:
 			std::cout << "Thanks for playing Tickets for Sale!" << std::endl;
 			running = false;
@@ -65,6 +70,15 @@ int TicketsForSaleApp::run()
 		}
 
 		handle_menu_transition(menu_result);
+
+		// Check for bankruptcy after gameplay actions (not in main menu or new game setup)
+		if (current_menu != MENU_START_GAME && current_menu != MENU_NEW_GAME &&
+			current_menu != MENU_LOAD_GAME && current_menu != MENU_SAVE_GAME &&
+			current_menu != MENU_BANKRUPTCY && is_game_bankrupt())
+		{
+			// Player is bankrupt - transition to bankruptcy screen
+			current_menu = MENU_BANKRUPTCY;
+		}
 	}
 
 	return 0;

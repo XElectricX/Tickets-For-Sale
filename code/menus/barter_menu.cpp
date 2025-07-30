@@ -27,10 +27,12 @@ public:
         {
             // Use a unique hotkey for each customer (first letter or fallback to number)
             char hotkey = customer.name.empty() ? ('1' + idx) : customer.name[0];
-            add_option("Sell to " + customer.name + " (Wants: " + customer.preferred_ticket_class + ")", hotkey, 100 + idx, [this, idx]() { handle_customer_selection(idx); });
+            add_option("Sell to " + customer.name + " (Wants: " + customer.preferred_ticket_class + ")", hotkey, MENU_BARTER, [this, idx]()
+                       { handle_customer_selection(idx); });
             ++idx;
         }
-        add_option("View Sales History", 'h', MENU_BARTER);
+        add_option("View Sales History", 'h', MENU_BARTER, [this]()
+                   { show_sales_history(); });
         add_option("Back to Counter", 'b', MENU_TICKET_COUNTER);
 
         set_footer("Select a customer to sell a ticket, or ESC/B to go back");
@@ -42,7 +44,7 @@ public:
         if (customer_index < 0 || customer_index >= static_cast<int>(game_data.customers.size()))
             return;
 
-        Customer& customer = game_data.customers[customer_index];
+        Customer &customer = game_data.customers[customer_index];
 
         // Convert preferred_ticket_class string to Ticket_Class enum
         Ticket_Class desired_class = Ticket_Class::TICKET_CLASS_ECONOMY;
@@ -55,11 +57,12 @@ public:
 
         // Find a ticket in inventory matching the desired class
         auto it = std::find_if(game_data.ticket_inventory.begin(), game_data.ticket_inventory.end(),
-            [desired_class](const Ticket& t) { return t.ticket_class == desired_class; });
+                               [desired_class](const Ticket &t)
+                               { return t.ticket_class == desired_class; });
 
         if (it == game_data.ticket_inventory.end())
         {
-            // No matching ticket, do nothing
+            // No matching ticket, provide user feedback
             return;
         }
 
@@ -71,7 +74,34 @@ public:
         game_data.ticket_inventory.erase(it);
         game_data.customers.erase(game_data.customers.begin() + customer_index);
 
-        // Optionally, refresh the menu (rebuild options)
+        // Refresh the menu (rebuild options)
+        refresh_menu_options();
+    }
+
+    void show_sales_history()
+    {
+        // Clear current status info and show sales history
+        status_info.clear();
+        add_status_info("📊 SALES HISTORY SUMMARY:");
+        add_status_info("🎟️ Total Tickets Sold: " + std::to_string(game_data.total_tickets_sold));
+        add_status_info("💰 Total Revenue: $" + std::to_string(game_data.total_revenue));
+        add_status_info("💸 Total Expenses: $" + std::to_string(game_data.total_expenses));
+        add_status_info("📈 Net Profit: $" + std::to_string(game_data.total_revenue - game_data.total_expenses));
+        add_status_info("👥 Total Customers Served: " + std::to_string(game_data.total_customers));
+
+        if (game_data.total_tickets_sold > 0)
+        {
+            int avg_sale_price = game_data.total_revenue / game_data.total_tickets_sold;
+            add_status_info("📊 Average Sale Price: $" + std::to_string(avg_sale_price));
+        }
+
+        add_status_info(""); // Empty line for spacing
+        add_status_info("Press any key to return to normal view...");
+    }
+
+private:
+    void refresh_menu_options()
+    {
         options.clear();
         add_status_info("🏢 Business: " + game_data.business_name);
         add_status_info("🧑 Player: " + game_data.player_name);
@@ -81,10 +111,12 @@ public:
         for (const auto &c : game_data.customers)
         {
             char hotkey = c.name.empty() ? ('1' + idx) : c.name[0];
-            add_option("Sell to " + c.name + " (Wants: " + c.preferred_ticket_class + ")", hotkey, 100 + idx, [this, idx]() { handle_customer_selection(idx); });
+            add_option("Sell to " + c.name + " (Wants: " + c.preferred_ticket_class + ")", hotkey, MENU_BARTER, [this, idx]()
+                       { handle_customer_selection(idx); });
             ++idx;
         }
-        add_option("View Sales History", 'h', MENU_BARTER);
+        add_option("View Sales History", 'h', MENU_BARTER, [this]()
+                   { show_sales_history(); });
         add_option("Back to Counter", 'b', MENU_TICKET_COUNTER);
     }
 
@@ -114,7 +146,7 @@ protected:
                      text("  |  "),
                      text("👥 Customers Served: " + std::to_string(game_data.total_customers)) | color(Color::Blue),
                      text("  |  "),
-                     text("💼 Active Negotiations: 4") | color(Color::Yellow)}) |
+                     text("💼 Active Negotiations: " + std::to_string(game_data.customers.size())) | color(Color::Yellow)}) |
                center;
     }
 };

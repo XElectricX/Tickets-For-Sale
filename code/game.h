@@ -8,21 +8,21 @@
 using std::string;
 using std::vector;
 
-//Game state data
+// Game state data
 struct Game
 {
 	string player_name;
 	string business_name;
-	int money;
+	int money = 1000; // Starting money for new players
 
-	//List of owned tickets
+	// List of owned tickets
 	vector<Ticket> ticket_inventory;
-	//List of tickets currently for sale
+	// List of tickets currently for sale
 	vector<Ticket_Datum> tickets_for_sale;
-	//List of references to customers waiting at the ticket counter
+	// List of references to customers waiting at the ticket counter
 	vector<Customer> customers;
 
-	//Statistics
+	// Statistics
 	int total_customers = 0;
 	int total_tickets_sold = 0;
 	int total_tickets_bought = 0;
@@ -30,5 +30,9 @@ struct Game
 	int total_expenses = 0;
 };
 
-//Global variable for the current game's data
+// Global variable for the current game's data
 extern Game game_data;
+
+// Game state checking functions
+bool is_game_bankrupt();
+int show_bankruptcy_screen();
