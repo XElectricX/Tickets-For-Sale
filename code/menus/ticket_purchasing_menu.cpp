@@ -37,11 +37,13 @@ public:
         add_option("Back to Counter", 'b', MENU_TICKET_COUNTER);
 
         // Add business, player, money, and total tickets purchased
+        // Add business, player, money, and total tickets purchased
         add_status_info("🏢 Business: " + game_data.business_name);
         add_status_info("🧑 Player: " + game_data.player_name);
         add_status_info("💰 Money: $" + std::to_string(game_data.money));
         add_status_info("🛒 Total Purchased: " + std::to_string(game_data.total_tickets_bought));
 
+        set_footer("Select a ticket to purchase, or ESC/B to go back");
         set_footer("Select a ticket to purchase, or ESC/B to go back");
         set_theme_colors(Color::Green, Color::White, Color::Yellow, Color::Cyan);
     }
@@ -140,6 +142,7 @@ protected:
     Element create_menu_content() override
     {
         // Display tickets available for purchase from tickets_for_sale
+        // Display tickets available for purchase from tickets_for_sale
         Elements ticket_elements;
 
         if (game_data.tickets_for_sale.empty())
@@ -157,46 +160,67 @@ protected:
                 std::string info = datum.route + " ($" + std::to_string(datum.price) + " each) - " + availability_text;
                 ticket_elements.push_back(text("• " + info) | color(text_color));
             }
-        }
 
-        return vbox({text("📋 AVAILABLE FROM SUPPLIERS") | bold | color(Color::GreenLight),
-                     separator(),
-                     vbox(ticket_elements) | border,
-                     separator(),
-                     text("💳 PURCHASE OPTIONS") | bold | color(Color::White),
-                     separator(),
-                     BaseMenu::create_menu_content()});
-    }
-};
-
-int show_ticket_purchasing_menu()
-{
-    while (true)
-    {
-        TicketPurchasingMenu menu;
-        int result = menu.show();
-
-        if (result == 1000)
-        {
-            // Show simple purchase history
-            system("cls"); // Clear screen on Windows
-            std::cout << "\n📊 PURCHASE HISTORY SUMMARY\n";
-            std::cout << "============================\n";
-            std::cout << "🛒 Total Tickets Purchased: " << game_data.total_tickets_bought << "\n";
-            std::cout << "💸 Total Expenses: $" << game_data.total_expenses << "\n";
-            std::cout << "📦 Current Inventory: " << game_data.ticket_inventory.size() << " tickets\n";
-
-            if (game_data.total_tickets_bought > 0)
+            if (game_data.tickets_for_sale.empty())
             {
-                int avg_price = game_data.total_expenses / game_data.total_tickets_bought;
-                std::cout << "📊 Average Purchase Price: $" << avg_price << "\n";
+                ticket_elements.push_back(text("• No tickets available from suppliers") | color(Color::Red));
+            }
+            else
+            {
+                for (const auto &datum : game_data.tickets_for_sale)
+                {
+                    std::string availability_text = datum.amount_available > 0 ? "Available: " + std::to_string(datum.amount_available) : "SOLD OUT";
+
+                    Color text_color = datum.amount_available > 0 ? Color::White : Color::Red;
+
+                    std::string info = datum.route + " ($" + std::to_string(datum.price) + " each) - " + availability_text;
+                    ticket_elements.push_back(text("• " + info) | color(text_color));
+                }
             }
 
-            std::cout << "\nPress Enter to continue...";
-            std::cin.get();
-            continue; // Return to purchasing menu
-        }
-
-        return result; // Return to main game
+        return vbox({
+                text("📋 AVAILABLE FROM SUPPLIERS") | bold | color(Color::GreenLight),
+                    separator(),
+                    return vbox({text("📋 AVAILABLE FROM SUPPLIERS") | bold | color(Color::GreenLight),
+                                 separator(),
+                                 vbox(ticket_elements) | border,
+                                 separator(),
+                                 text("💳 PURCHASE OPTIONS") | bold | color(Color::White),
+                                 separator(),
+                                 text("💳 PURCHASE OPTIONS") | bold | color(Color::White),
+                                 separator(),
+                                 BaseMenu::create_menu_content()});
     }
-}
+        };
+
+        int show_ticket_purchasing_menu()
+        {
+            while (true)
+            {
+                TicketPurchasingMenu menu;
+                int result = menu.show();
+
+                if (result == 1000)
+                {
+                    // Show simple purchase history
+                    system("cls"); // Clear screen on Windows
+                    std::cout << "\n📊 PURCHASE HISTORY SUMMARY\n";
+                    std::cout << "============================\n";
+                    std::cout << "🛒 Total Tickets Purchased: " << game_data.total_tickets_bought << "\n";
+                    std::cout << "💸 Total Expenses: $" << game_data.total_expenses << "\n";
+                    std::cout << "📦 Current Inventory: " << game_data.ticket_inventory.size() << " tickets\n";
+
+                    if (game_data.total_tickets_bought > 0)
+                    {
+                        int avg_price = game_data.total_expenses / game_data.total_tickets_bought;
+                        std::cout << "📊 Average Purchase Price: $" << avg_price << "\n";
+                    }
+
+                    std::cout << "\nPress Enter to continue...";
+                    std::cin.get();
+                    continue; // Return to purchasing menu
+                }
+
+                return result; // Return to main game
+            }
+        }

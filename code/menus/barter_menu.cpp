@@ -47,6 +47,7 @@ public:
             return;
 
         Customer &customer = game_data.customers[customer_index];
+        Customer &customer = game_data.customers[customer_index];
 
         // Convert preferred_ticket_class string to Ticket_Class enum
         Ticket_Class desired_class = Ticket_Class::TICKET_CLASS_ECONOMY;
@@ -61,23 +62,27 @@ public:
         auto it = std::find_if(game_data.ticket_inventory.begin(), game_data.ticket_inventory.end(),
                                [desired_class](const Ticket &t)
                                { return t.ticket_class == desired_class; });
+                               [desired_class](const Ticket &t)
+                               {
+            return t.ticket_class == desired_class; });
 
-        if (it == game_data.ticket_inventory.end())
-        {
-            // No matching ticket, provide user feedback
-            return;
-        }
+                               if (it == game_data.ticket_inventory.end())
+                               {
+                                   // No matching ticket, provide user feedback
+                                   // No matching ticket, provide user feedback
+                                   return;
+                               }
 
-        // Sell the ticket: add money, remove ticket, remove customer
-        int sale_price = it->price_paid; // You can adjust this logic as needed
-        game_data.money += sale_price;
-        game_data.total_tickets_sold++;
-        game_data.total_revenue += sale_price;
-        game_data.ticket_inventory.erase(it);
-        game_data.customers.erase(game_data.customers.begin() + customer_index);
+                               // Sell the ticket: add money, remove ticket, remove customer
+                               int sale_price = it->price_paid; // You can adjust this logic as needed
+                               game_data.money += sale_price;
+                               game_data.total_tickets_sold++;
+                               game_data.total_revenue += sale_price;
+                               game_data.ticket_inventory.erase(it);
+                               game_data.customers.erase(game_data.customers.begin() + customer_index);
 
-        // Refresh the menu (rebuild options)
-        refresh_menu_options();
+                               // Refresh the menu (rebuild options)
+                               refresh_menu_options();
     }
 
     void show_sales_history()
@@ -155,9 +160,11 @@ protected:
                      text("👥 Customers Served: " + std::to_string(game_data.total_customers)) | color(Color::Blue),
                      text("  |  "),
                      text("💼 Active Negotiations: " + std::to_string(game_data.customers.size())) | color(Color::Yellow)}) |
+                     text("💼 Active Negotiations: " + std::to_string(game_data.customers.size())) | color(Color::Yellow)}) |
                center;
-    }
-};
+}
+}
+;
 
 int show_barter_menu()
 {
