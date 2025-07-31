@@ -7,6 +7,7 @@
 #include "menu_system.h"
 #include "base_menu.h"
 #include "code/game.h"
+#include "code/defines.h"
 
 using namespace ftxui;
 
@@ -18,10 +19,17 @@ public:
         add_option("View Ticket Details", 'v', MENU_INVENTORY);
         add_option("Sort by Price", 'p', MENU_INVENTORY);
         add_option("Sort by Stock", 's', MENU_INVENTORY);
-        add_option("Back to Counter", 'b', MENU_TICKET_COUNTER); // Changed to go back to ticket counter
+        add_option("Back to Counter", 'b', MENU_TICKET_COUNTER);
 
-        add_status_info("Total Value: $1,847");
-        add_status_info("Items: 66");
+        // Calculate dynamic status information
+        int total_value = 0;
+        for (const auto &ticket : game_data.ticket_inventory)
+        {
+            total_value += ticket.price_paid;
+        }
+
+        add_status_info("Total Value: $" + std::to_string(total_value));
+        add_status_info("Items: " + std::to_string(game_data.ticket_inventory.size()));
 
         set_footer("Use arrow keys, hotkeys [V/P/S/B], or Enter to select");
         set_theme_colors(Color::Blue, Color::White, Color::Yellow, Color::Green);
@@ -30,18 +38,46 @@ public:
 protected:
     Element create_menu_content() override
     {
-        //Display tickets from the player's inventory
+        // Display tickets from the player's inventory
         Elements ticket_elements;
-        for (const auto &ticket : game_data.ticket_inventory)
+
+        if (game_data.ticket_inventory.empty())
         {
-            std::string info = ticket.route + " ($" + std::to_string(ticket.price_paid) + ") - Class: " + std::to_string(static_cast<int>(ticket.ticket_class));
-            ticket_elements.push_back(text("• " + info));
+            ticket_elements.push_back(text("No tickets in inventory") | color(Color::GrayLight) | center);
+        }
+        else
+        {
+            for (size_t i = 0; i < game_data.ticket_inventory.size(); ++i)
+            {
+                const auto &ticket = game_data.ticket_inventory[i];
+                std::string class_name;
+                switch (ticket.ticket_class)
+                {
+                case Ticket_Class::TICKET_CLASS_ECONOMY:
+                    class_name = "Economy";
+                    break;
+                case Ticket_Class::TICKET_CLASS_BUSINESS:
+                    class_name = "Business";
+                    break;
+                case Ticket_Class::TICKET_CLASS_LUXURY:
+                    class_name = "First";
+                    break;
+                default:
+                    class_name = "Unknown";
+                    break;
+                }
+
+                std::string info = std::to_string(i + 1) + ". " + ticket.route +
+                                   " | $" + std::to_string(ticket.price_paid) +
+                                   " | " + class_name + " Class";
+                ticket_elements.push_back(text("• " + info) | color(Color::White));
+            }
         }
 
-        return vbox({text("Current Stock:") | bold,
-                     vbox(ticket_elements) | border,
+        return vbox({text("Current Stock:") | bold | color(Color::Yellow),
+                     vbox(ticket_elements) | border | color(Color::Blue),
                      separator(),
-                     text("Actions:") | bold,
+                     text("Actions:") | bold | color(Color::Green),
                      BaseMenu::create_menu_content()});
     }
 };
