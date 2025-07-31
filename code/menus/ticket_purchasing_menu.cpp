@@ -4,6 +4,8 @@
 #include <ftxui/component/screen_interactive.hpp>
 #include <vector>
 #include <string>
+#include <iostream>
+#include <cstdlib>
 #include "menu_system.h"
 #include "base_menu.h"
 #include "code/game.h"
@@ -17,20 +19,21 @@ public:
     {
         // Add an option for each available ticket type
         int idx = 0;
-        for (const auto &ticket_datum : game_data.tickets_for_sale)
+        for (size_t i = 0; i < game_data.tickets_for_sale.size(); ++i)
         {
+            const auto &ticket_datum = game_data.tickets_for_sale[i];
             if (ticket_datum.amount_available > 0)
             {
                 char hotkey = (idx < 9) ? ('1' + idx) : ('a' + (idx - 9));
                 std::string option_text = "Buy " + ticket_datum.route + " ($" + std::to_string(ticket_datum.price) + " each) - " + std::to_string(ticket_datum.amount_available) + " available";
-                add_option(option_text, hotkey, MENU_PURCHASE, [this, idx]()
-                           { handle_ticket_purchase(idx); });
+                // Capture the actual vector index (i) instead of the display index (idx)
+                add_option(option_text, hotkey, MENU_PURCHASE, [this, i]()
+                           { handle_ticket_purchase(static_cast<int>(i)); });
                 ++idx;
             }
         }
 
-        add_option("View Purchase History", 'h', MENU_PURCHASE, [this]()
-                   { show_purchase_history(); });
+        add_option("View Purchase History", 'h', 1000); // Special return code for history
         add_option("Back to Counter", 'b', MENU_TICKET_COUNTER);
 
         // Add business, player, money, and total tickets purchased
@@ -45,14 +48,20 @@ public:
 
     void handle_ticket_purchase(int ticket_index)
     {
+        // Safety check: ensure the index is valid
         if (ticket_index < 0 || ticket_index >= static_cast<int>(game_data.tickets_for_sale.size()))
+        {
+            // Index out of bounds - refresh menu and return
+            refresh_menu_options();
             return;
+        }
 
         Ticket_Datum &ticket_datum = game_data.tickets_for_sale[ticket_index];
 
         // Check if tickets are available
         if (ticket_datum.amount_available <= 0)
         {
+            refresh_menu_options();
             return;
         }
 
@@ -96,46 +105,27 @@ public:
         refresh_menu_options();
     }
 
-    void show_purchase_history()
-    {
-        // Clear current status info and show purchase history
-        status_info.clear();
-        add_status_info("📊 PURCHASE HISTORY SUMMARY:");
-        add_status_info("🛒 Total Tickets Purchased: " + std::to_string(game_data.total_tickets_bought));
-        add_status_info("💸 Total Expenses: $" + std::to_string(game_data.total_expenses));
-        add_status_info("📦 Current Inventory: " + std::to_string(game_data.ticket_inventory.size()) + " tickets");
-
-        if (game_data.total_tickets_bought > 0)
-        {
-            int avg_purchase_price = game_data.total_expenses / game_data.total_tickets_bought;
-            add_status_info("📊 Average Purchase Price: $" + std::to_string(avg_purchase_price));
-        }
-
-        add_status_info(""); // Empty line for spacing
-        add_status_info("Press any key to return to normal view...");
-    }
-
-private:
     void refresh_menu_options()
     {
         options.clear();
 
         // Add purchase options for available tickets
         int idx = 0;
-        for (const auto &ticket_datum : game_data.tickets_for_sale)
+        for (size_t i = 0; i < game_data.tickets_for_sale.size(); ++i)
         {
+            const auto &ticket_datum = game_data.tickets_for_sale[i];
             if (ticket_datum.amount_available > 0)
             {
                 char hotkey = (idx < 9) ? ('1' + idx) : ('a' + (idx - 9));
                 std::string option_text = "Buy " + ticket_datum.route + " ($" + std::to_string(ticket_datum.price) + " each) - " + std::to_string(ticket_datum.amount_available) + " available";
-                add_option(option_text, hotkey, MENU_PURCHASE, [this, idx]()
-                           { handle_ticket_purchase(idx); });
+                // Capture the actual vector index (i) instead of the display index (idx)
+                add_option(option_text, hotkey, MENU_PURCHASE, [this, i]()
+                           { handle_ticket_purchase(static_cast<int>(i)); });
                 ++idx;
             }
         }
 
-        add_option("View Purchase History", 'h', MENU_PURCHASE, [this]()
-                   { show_purchase_history(); });
+        add_option("View Purchase History", 'h', 1000); // Special return code for history
         add_option("Back to Counter", 'b', MENU_TICKET_COUNTER);
 
         // Update status info
@@ -181,6 +171,29 @@ protected:
 
 int show_ticket_purchasing_menu()
 {
-    TicketPurchasingMenu menu;
-    return menu.show();
+    while (true) {
+        TicketPurchasingMenu menu; 
+        int result = menu.show();
+        
+        if (result == 1000) {
+            // Show simple purchase history
+            system("cls"); // Clear screen on Windows
+            std::cout << "\n📊 PURCHASE HISTORY SUMMARY\n";
+            std::cout << "============================\n";
+            std::cout << "🛒 Total Tickets Purchased: " << game_data.total_tickets_bought << "\n";
+            std::cout << "💸 Total Expenses: $" << game_data.total_expenses << "\n";
+            std::cout << "📦 Current Inventory: " << game_data.ticket_inventory.size() << " tickets\n";
+            
+            if (game_data.total_tickets_bought > 0) {
+                int avg_price = game_data.total_expenses / game_data.total_tickets_bought;
+                std::cout << "📊 Average Purchase Price: $" << avg_price << "\n";
+            }
+            
+            std::cout << "\nPress Enter to continue...";
+            std::cin.get();
+            continue; // Return to purchasing menu
+        }
+        
+        return result; // Return to main game
+    }
 }

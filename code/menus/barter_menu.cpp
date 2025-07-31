@@ -96,10 +96,15 @@ public:
         }
 
         add_status_info(""); // Empty line for spacing
-        add_status_info("Press any key to return to normal view...");
+        add_status_info("Press 'r' to return to normal view...");
+
+        // Add a return option
+        options.clear();
+        add_option("Return to Customer List", 'r', MENU_BARTER, [this]()
+                   { refresh_menu_options(); });
+        add_option("Back to Counter", 'b', MENU_TICKET_COUNTER);
     }
 
-private:
     void refresh_menu_options()
     {
         options.clear();
