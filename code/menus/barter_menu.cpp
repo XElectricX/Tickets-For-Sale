@@ -4,6 +4,8 @@
 #include <ftxui/component/screen_interactive.hpp>
 #include <vector>
 #include <string>
+#include <iostream>
+#include <cstdlib>
 #include "menu_system.h"
 #include "base_menu.h"
 #include "code/game.h"
@@ -23,16 +25,16 @@ public:
 
         // Add an option for each customer
         int idx = 0;
-        for (const auto &customer : game_data.customers)
+        for (size_t i = 0; i < game_data.customers.size(); ++i)
         {
+            const auto &customer = game_data.customers[i];
             // Use a unique hotkey for each customer (first letter or fallback to number)
             char hotkey = customer.name.empty() ? ('1' + idx) : customer.name[0];
-            add_option("Sell to " + customer.name + " (Wants: " + customer.preferred_ticket_class + ")", hotkey, MENU_BARTER, [this, idx]()
-                       { handle_customer_selection(idx); });
+            add_option("Sell to " + customer.name + " (Wants: " + customer.preferred_ticket_class + ")", hotkey, MENU_BARTER, [this, i]()
+                       { handle_customer_selection(static_cast<int>(i)); });
             ++idx;
         }
-        add_option("View Sales History", 'h', MENU_BARTER, [this]()
-                   { show_sales_history(); });
+        add_option("View Sales History", 'h', 2000); // Special return code for sales history
         add_option("Back to Counter", 'b', MENU_TICKET_COUNTER);
 
         set_footer("Select a customer to sell a ticket, or ESC/B to go back");
@@ -108,20 +110,21 @@ public:
     void refresh_menu_options()
     {
         options.clear();
+        status_info.clear(); // Clear status info first
         add_status_info("🏢 Business: " + game_data.business_name);
         add_status_info("🧑 Player: " + game_data.player_name);
         add_status_info("💰 Money: $" + std::to_string(game_data.money));
         add_status_info("🎟️ Total Sold: " + std::to_string(game_data.total_tickets_sold));
         int idx = 0;
-        for (const auto &c : game_data.customers)
+        for (size_t i = 0; i < game_data.customers.size(); ++i)
         {
+            const auto &c = game_data.customers[i];
             char hotkey = c.name.empty() ? ('1' + idx) : c.name[0];
-            add_option("Sell to " + c.name + " (Wants: " + c.preferred_ticket_class + ")", hotkey, MENU_BARTER, [this, idx]()
-                       { handle_customer_selection(idx); });
+            add_option("Sell to " + c.name + " (Wants: " + c.preferred_ticket_class + ")", hotkey, MENU_BARTER, [this, i]()
+                       { handle_customer_selection(static_cast<int>(i)); });
             ++idx;
         }
-        add_option("View Sales History", 'h', MENU_BARTER, [this]()
-                   { show_sales_history(); });
+        add_option("View Sales History", 'h', 2000); // Special return code for sales history
         add_option("Back to Counter", 'b', MENU_TICKET_COUNTER);
     }
 
@@ -158,6 +161,36 @@ protected:
 
 int show_barter_menu()
 {
-    BarterMenu menu;
-    return menu.show();
+    while (true)
+    {
+        BarterMenu menu;
+        int result = menu.show();
+
+        if (result == 2000)
+        {
+            // Show simple sales history
+            system("cls"); // Clear screen on Windows
+            std::cout << "\n📊 SALES HISTORY SUMMARY\n";
+            std::cout << "============================\n";
+            std::cout << "🎟️ Total Tickets Sold: " << game_data.total_tickets_sold << "\n";
+            std::cout << "💰 Total Revenue: $" << game_data.total_revenue << "\n";
+            std::cout << "💸 Total Expenses: $" << game_data.total_expenses << "\n";
+
+            int net_profit = game_data.total_revenue - game_data.total_expenses;
+            std::cout << "📈 Net Profit: $" << net_profit << "\n";
+            std::cout << "👥 Total Customers Served: " << game_data.total_customers << "\n";
+
+            if (game_data.total_tickets_sold > 0)
+            {
+                int avg_sale_price = game_data.total_revenue / game_data.total_tickets_sold;
+                std::cout << "📊 Average Sale Price: $" << avg_sale_price << "\n";
+            }
+
+            std::cout << "\nPress Enter to continue...";
+            std::cin.get();
+            continue; // Return to barter menu
+        }
+
+        return result; // Return to main game
+    }
 }

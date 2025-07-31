@@ -171,11 +171,13 @@ protected:
 
 int show_ticket_purchasing_menu()
 {
-    while (true) {
-        TicketPurchasingMenu menu; 
+    while (true)
+    {
+        TicketPurchasingMenu menu;
         int result = menu.show();
-        
-        if (result == 1000) {
+
+        if (result == 1000)
+        {
             // Show simple purchase history
             system("cls"); // Clear screen on Windows
             std::cout << "\n📊 PURCHASE HISTORY SUMMARY\n";
@@ -183,17 +185,18 @@ int show_ticket_purchasing_menu()
             std::cout << "🛒 Total Tickets Purchased: " << game_data.total_tickets_bought << "\n";
             std::cout << "💸 Total Expenses: $" << game_data.total_expenses << "\n";
             std::cout << "📦 Current Inventory: " << game_data.ticket_inventory.size() << " tickets\n";
-            
-            if (game_data.total_tickets_bought > 0) {
+
+            if (game_data.total_tickets_bought > 0)
+            {
                 int avg_price = game_data.total_expenses / game_data.total_tickets_bought;
                 std::cout << "📊 Average Purchase Price: $" << avg_price << "\n";
             }
-            
+
             std::cout << "\nPress Enter to continue...";
             std::cin.get();
             continue; // Return to purchasing menu
         }
-        
+
         return result; // Return to main game
     }
 }
